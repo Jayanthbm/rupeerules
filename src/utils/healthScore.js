@@ -49,8 +49,16 @@ export function calculateHealthScore(rules) {
       } else {
         ruleScore = Math.round((actual / recommended) * 100);
       }
+    } else if (rule.id === 6) {
+      // Max total EMI - ceiling rule (under or at recommended is best)
+      if (actual <= recommended) {
+        ruleScore = 100;
+      } else {
+        const overPercent = ((actual - recommended) / recommended) * 100;
+        ruleScore = Math.max(0, 100 - overPercent * 2);
+      }
     } else {
-      // Lump sum targets (6, 8, 9)
+      // Lump sum targets: Emergency fund (7), Corpus FIRE (8)
       if (actual >= recommended) {
         ruleScore = 100;
       } else {

@@ -13,9 +13,9 @@ Personal finance calculator tailored for Indian salary earners to budget spendin
   - **Short-Term Goals**: 15% for upcoming milestones (travel, wedding, gadgets)
   - **Long-Term Wealth**: 15% recurring monthly investment
 - **Wealth Targets & Safety Caps**:
-  - **Income Replacement Corpus**: Target 120× monthly salary
-  - **Emergency Fund**: 6 months salary buffer in liquid assets
   - **Max Total EMI**: Hard cap at 40% of monthly salary
+  - **Emergency Fund**: 6 months salary buffer in liquid assets
+  - **Income Replacement Corpus (FIRE number)**: Target 120× monthly salary
 - **Financial Health Score**: Dynamic score and feedback based on user allocations and progress.
 - **Dark Mode Support**: Seamless toggle between light and dark themes.
 - **Offline & Persistent**: Local storage persistence for entered financial data.

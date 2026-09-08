@@ -98,31 +98,7 @@ export function getRuleFeedback(ruleId, status, actual, recommended) {
         type: "good",
       };
 
-    case 6: // Corpus to replace income (120x)
-      if (actual >= recommended) {
-        return {
-          text: "Financial independence target achieved! Working is now completely optional.",
-          type: "good",
-        };
-      }
-      return {
-        text: `${formattedDiff} remaining to achieve complete financial freedom.`,
-        type: "info",
-      };
-
-    case 7: // Emergency fund (6x)
-      if (actual >= recommended) {
-        return {
-          text: "Fully funded 6-month safety buffer in place. You are protected against surprises!",
-          type: "good",
-        };
-      }
-      return {
-        text: `${formattedDiff} needed to reach full 6-month emergency protection.`,
-        type: "info",
-      };
-
-    case 8: // Max total EMI (40% max)
+    case 6: // Max total EMI (40% max)
       if (status === "on-target") {
         return {
           text: "At the recommended EMI ceiling (40%). Avoid taking on additional loan obligations.",
@@ -138,6 +114,30 @@ export function getRuleFeedback(ruleId, status, actual, recommended) {
       return {
         text: `High debt burden (+${formattedDiff} over 40%). High EMIs increase financial risk.`,
         type: "warn",
+      };
+
+    case 7: // Emergency fund (6x)
+      if (actual >= recommended) {
+        return {
+          text: "Fully funded 6-month safety buffer in place. You are protected against surprises!",
+          type: "good",
+        };
+      }
+      return {
+        text: `${formattedDiff} needed to reach full 6-month emergency protection.`,
+        type: "info",
+      };
+
+    case 8: // Corpus to replace income / FIRE (120x)
+      if (actual >= recommended) {
+        return {
+          text: "Financial independence target achieved! Working is now completely optional.",
+          type: "good",
+        };
+      }
+      return {
+        text: `${formattedDiff} remaining to achieve complete financial freedom.`,
+        type: "info",
       };
 
     default:

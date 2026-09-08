@@ -72,8 +72,8 @@ export default function RuleCard({ rule, item, onActualChange }) {
 
           {item.actualRaw !== "" && item.actualRaw !== undefined && item.actualRaw !== null && (
             <div className={`mrc-diff mrc-diff-${item.status}`}>
-              {/* Cumulative target rules: Corpus (6) and Emergency Fund (7) */}
-              {(rule.id === 6 || rule.id === 7) ? (
+              {/* Cumulative target rules: Emergency Fund (7) and Corpus (8) */}
+              {(rule.id === 7 || rule.id === 8) ? (
                 item.actual >= item.recommended ? (
                   <>
                     <span className="mrc-diff-dot mrc-diff-dot-good" />

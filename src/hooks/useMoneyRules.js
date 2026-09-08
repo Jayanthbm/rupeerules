@@ -124,7 +124,7 @@ export function useMoneyRules() {
       let progress;
       let progressLabel;
 
-      if (rule.id === 6) {
+      if (rule.id === 8) {
         const remain = Math.max(0, recommended - actualNum);
         progress = actualNum > 0 ? (actualNum / recommended) * 100 : 0;
         progressLabel = actualNum > 0
