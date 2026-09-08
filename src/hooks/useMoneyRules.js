@@ -1,47 +1,32 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { ALL_RULES } from "../rules";
 import { formatSalaryInput, stripFormatting, formatMoney } from "../utils/formatters";
-import { loadSavedState, saveState, clearSavedState, isStale } from "../utils/storage";
+import {
+  loadAllData,
+  saveAllData,
+  getCurrentMonthKey,
+  clearSavedState,
+  cleanActuals,
+  cleanBreakdownItems,
+} from "../utils/storage";
 
 export function useMoneyRules() {
+  const [store, setStore] = useState(() => loadAllData());
+  const activeMonth = store.activeMonth || getCurrentMonthKey();
+  const currentMonthData = store.months?.[activeMonth] || {};
+
   const [monthlySalary, setMonthlySalary] = useState(() => {
-    const saved = loadSavedState();
-    if (saved && !isStale(saved) && saved.salary > 0) {
-      return formatSalaryInput(saved.salary);
-    }
-    return "";
+    return currentMonthData.salary > 0 ? formatSalaryInput(currentMonthData.salary) : "";
   });
 
-  const [salary, setSalary] = useState(() => {
-    const saved = loadSavedState();
-    if (saved && !isStale(saved) && saved.salary > 0) {
-      return saved.salary;
-    }
-    return 0;
-  });
-
-  const [salaryTransition, setSalaryTransition] = useState(() => {
-    const saved = loadSavedState();
-    if (saved && !isStale(saved) && saved.salary > 0) {
-      return saved.salary;
-    }
-    return 0;
-  });
-
-  const [actuals, setActuals] = useState(() => {
-    const saved = loadSavedState();
-    if (saved && !isStale(saved) && saved.actuals && typeof saved.actuals === "object") {
-      return saved.actuals;
-    }
-    return {};
-  });
+  const [salary, setSalary] = useState(() => currentMonthData.salary || 0);
+  const [salaryTransition, setSalaryTransition] = useState(() => currentMonthData.salary || 0);
+  const [actuals, setActuals] = useState(() => currentMonthData.actuals || {});
 
   const [breakdownItems, setBreakdownItems] = useState(() => {
-    const saved = loadSavedState();
-    if (saved && !isStale(saved) && saved.items && typeof saved.items === "object") {
-      return saved.items;
+    if (currentMonthData.items && Object.keys(currentMonthData.items).length > 0) {
+      return currentMonthData.items;
     }
-    // Initialize default templates from ALL_RULES
     const initial = {};
     for (const rule of ALL_RULES) {
       if (rule.defaultItems) {
@@ -52,6 +37,72 @@ export function useMoneyRules() {
   });
 
   const [activeTab, setActiveTab] = useState("spending");
+
+  // Keep ref to latest state values to avoid stale closures in event sync
+  const isInitialMount = useRef(true);
+
+  // Sync state when activeMonth changes
+  const switchMonth = useCallback((targetMonth) => {
+    const loadedStore = loadAllData();
+    const monthData = loadedStore.months?.[targetMonth] || {};
+    const newSalary = monthData.salary || 0;
+    const newActuals = monthData.actuals || {};
+
+    let newItems = monthData.items;
+    if (!newItems || Object.keys(newItems).length === 0) {
+      newItems = {};
+      for (const rule of ALL_RULES) {
+        if (rule.defaultItems) {
+          newItems[rule.id] = rule.defaultItems;
+        }
+      }
+    }
+
+    setSalary(newSalary);
+    setSalaryTransition(newSalary);
+    setMonthlySalary(newSalary > 0 ? formatSalaryInput(newSalary) : "");
+    setActuals(newActuals);
+    setBreakdownItems(newItems);
+
+    const nextStore = {
+      ...loadedStore,
+      activeMonth: targetMonth,
+    };
+    saveAllData(nextStore);
+    setStore(nextStore);
+  }, []);
+
+  // Copy data from a given source month into activeMonth
+  const copyFromMonth = useCallback((sourceMonthKey) => {
+    const loadedStore = loadAllData();
+    const sourceData = loadedStore.months?.[sourceMonthKey];
+    if (!sourceData) return false;
+
+    const copiedSalary = sourceData.salary || 0;
+    const copiedActuals = { ...(sourceData.actuals || {}) };
+    const copiedItems = JSON.parse(JSON.stringify(sourceData.items || {}));
+
+    setSalary(copiedSalary);
+    setSalaryTransition(copiedSalary);
+    setMonthlySalary(copiedSalary > 0 ? formatSalaryInput(copiedSalary) : "");
+    setActuals(copiedActuals);
+    setBreakdownItems(copiedItems);
+
+    const activeM = loadedStore.activeMonth || getCurrentMonthKey();
+    const updatedMonths = {
+      ...(loadedStore.months || {}),
+      [activeM]: {
+        salary: copiedSalary,
+        actuals: cleanActuals(copiedActuals),
+        items: cleanBreakdownItems(copiedItems),
+        updatedAt: Date.now(),
+      },
+    };
+    const nextStore = { ...loadedStore, months: updatedMonths };
+    saveAllData(nextStore);
+    setStore(nextStore);
+    return true;
+  }, []);
 
   // Animate salaryTransition towards target salary
   useEffect(() => {
@@ -84,10 +135,27 @@ export function useMoneyRules() {
     };
   }, [salary, salaryTransition]);
 
-  // Sync to local storage
+  // Persist current month data to local storage on changes
   useEffect(() => {
-    if (salary > 0) {
-      saveState(salary, actuals, breakdownItems);
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    if (salary > 0 || Object.keys(actuals).length > 0) {
+      const loaded = loadAllData();
+      const activeM = loaded.activeMonth || getCurrentMonthKey();
+      const updatedMonths = {
+        ...(loaded.months || {}),
+        [activeM]: {
+          salary,
+          actuals: cleanActuals(actuals),
+          items: cleanBreakdownItems(breakdownItems),
+          updatedAt: Date.now(),
+        },
+      };
+      const nextStore = { ...loaded, months: updatedMonths };
+      saveAllData(nextStore);
     }
   }, [salary, actuals, breakdownItems]);
 
@@ -121,7 +189,6 @@ export function useMoneyRules() {
     }));
   }, []);
 
-  // Update item within a rule's breakdown
   const updateBreakdownItem = useCallback((ruleId, itemId, field, rawValue) => {
     setBreakdownItems((prev) => {
       const currentList = prev[ruleId] || [];
@@ -132,7 +199,6 @@ export function useMoneyRules() {
         return item;
       });
 
-      // Recalculate sum of breakdown items and sync to actuals
       let sum = 0;
       let hasAnyValue = false;
       for (const it of updatedList) {
@@ -195,6 +261,18 @@ export function useMoneyRules() {
     });
   }, []);
 
+  const reloadFromStore = useCallback(() => {
+    const loaded = loadAllData();
+    setStore(loaded);
+    const activeM = loaded.activeMonth || getCurrentMonthKey();
+    const data = loaded.months?.[activeM] || {};
+    setSalary(data.salary || 0);
+    setSalaryTransition(data.salary || 0);
+    setMonthlySalary(data.salary > 0 ? formatSalaryInput(data.salary) : "");
+    setActuals(data.actuals || {});
+    setBreakdownItems(data.items || {});
+  }, []);
+
   const handleClearAll = useCallback(() => {
     setActuals({});
     setMonthlySalary("");
@@ -208,6 +286,7 @@ export function useMoneyRules() {
     }
     setBreakdownItems(initial);
     clearSavedState();
+    setStore({ activeMonth: getCurrentMonthKey(), months: {} });
   }, []);
 
   // Compute rule items
@@ -274,6 +353,8 @@ export function useMoneyRules() {
   }, [rulesWithAmounts]);
 
   return {
+    store,
+    activeMonth,
     salary,
     monthlySalary,
     salaryTransition,
@@ -281,6 +362,9 @@ export function useMoneyRules() {
     breakdownItems,
     activeTab,
     setActiveTab,
+    switchMonth,
+    copyFromMonth,
+    reloadFromStore,
     handleSalaryChange,
     handleSalaryCommit,
     updateActual,

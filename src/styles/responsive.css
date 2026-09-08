@@ -26,6 +26,28 @@
     font-size: 12px;
   }
 
+  .mrc-btn-text-desktop {
+    display: none;
+  }
+
+  .mrc-header-icon-btn {
+    padding: 0 8px;
+  }
+
+  .mrc-month-picker {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .mrc-month-nav {
+    justify-content: space-between;
+  }
+
+  .mrc-copy-prev-btn {
+    justify-content: center;
+  }
+
   .mrc-input-section {
     padding: 14px;
     gap: 10px;

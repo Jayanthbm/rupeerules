@@ -1,16 +1,18 @@
 .mrc-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  padding-bottom: 8px;
+  align-items: center;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--mrc-border);
   transition: border-color 0.3s ease;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .mrc-brand {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .mrc-logo {
@@ -50,18 +52,38 @@
 .mrc-header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: auto;
+  gap: 8px;
+}
+
+.mrc-header-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--mrc-border);
+  border-radius: 9px;
+  background: var(--mrc-bg-secondary);
+  color: var(--mrc-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mrc-header-icon-btn:hover {
+  background: var(--mrc-bg-tertiary);
+  border-color: var(--mrc-accent);
 }
 
 .mrc-dark-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border: 1px solid var(--mrc-border);
-  border-radius: 10px;
+  border-radius: 9px;
   background: var(--mrc-bg-secondary);
   color: var(--mrc-text);
   cursor: pointer;
@@ -84,4 +106,374 @@
 
 .mrc-dark-toggle:hover svg {
   transform: rotate(15deg);
+}
+
+/* --- MonthPicker Styles --- */
+
+.mrc-month-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--mrc-bg-secondary);
+  border: 1px solid var(--mrc-border);
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+
+.mrc-month-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mrc-month-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--mrc-border);
+  border-radius: 7px;
+  background: var(--mrc-bg);
+  color: var(--mrc-text);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mrc-month-btn:hover {
+  border-color: var(--mrc-accent);
+  color: var(--mrc-accent);
+}
+
+.mrc-month-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mrc-text);
+}
+
+.mrc-copy-prev-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px dashed var(--mrc-accent);
+  background: color-mix(in srgb, var(--mrc-accent) 8%, transparent);
+  color: var(--mrc-accent);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mrc-copy-prev-btn:hover {
+  background: var(--mrc-accent);
+  color: #ffffff;
+}
+
+/* --- Modal Overlays & Styles --- */
+
+.mrc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.mrc-modal-content {
+  background: var(--mrc-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  animation: modalScale 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.mrc-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--mrc-border);
+  position: sticky;
+  top: 0;
+  background: inherit;
+  z-index: 10;
+}
+
+.mrc-modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mrc-modal-title-group h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--mrc-text);
+}
+
+.mrc-modal-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--mrc-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.mrc-modal-close-btn:hover {
+  color: var(--mrc-text);
+  background: var(--mrc-bg-secondary);
+}
+
+.mrc-modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.mrc-modal-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--mrc-text-muted);
+  font-size: 14px;
+}
+
+/* --- Reports Styles --- */
+
+.mrc-reports-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.mrc-report-stat-card {
+  background: var(--mrc-bg-secondary);
+  border: 1px solid var(--mrc-border);
+  padding: 14px 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mrc-report-stat-label {
+  font-size: 12px;
+  color: var(--mrc-text-muted);
+}
+
+.mrc-report-stat-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--mrc-text);
+}
+
+.mrc-report-section h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--mrc-text);
+}
+
+.mrc-report-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--mrc-border);
+  border-radius: 10px;
+}
+
+.mrc-report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.mrc-report-table th,
+.mrc-report-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--mrc-border);
+  white-space: nowrap;
+}
+
+.mrc-report-table th {
+  background: var(--mrc-bg-secondary);
+  color: var(--mrc-text-muted);
+  font-weight: 600;
+}
+
+.mrc-rate-badge {
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--mrc-bg-secondary);
+}
+
+.mrc-rules-ref-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.mrc-rules-ref-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--mrc-bg-secondary);
+  border: 1px solid var(--mrc-border);
+  border-radius: 8px;
+}
+
+.mrc-ref-badge {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+.mrc-ref-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.mrc-ref-info strong {
+  color: var(--mrc-text);
+}
+
+.mrc-ref-info span {
+  color: var(--mrc-text-muted);
+}
+
+/* --- Backup Modal Styles --- */
+
+.mrc-backup-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--mrc-text-muted);
+  line-height: 1.5;
+}
+
+.mrc-backup-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.mrc-backup-card {
+  background: var(--mrc-bg-secondary);
+  border: 1px solid var(--mrc-border);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mrc-backup-card h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--mrc-text);
+}
+
+.mrc-backup-card p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--mrc-text-muted);
+  line-height: 1.5;
+}
+
+.mrc-backup-btn-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.mrc-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.mrc-btn-primary {
+  background: var(--mrc-accent);
+  color: #ffffff;
+}
+
+.mrc-btn-primary:hover {
+  opacity: 0.9;
+}
+
+.mrc-btn-secondary {
+  background: var(--mrc-bg);
+  border: 1px solid var(--mrc-border);
+  color: var(--mrc-text);
+}
+
+.mrc-btn-secondary:hover {
+  background: var(--mrc-bg-tertiary);
+  border-color: var(--mrc-accent);
+}
+
+.mrc-import-status {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mrc-import-ok {
+  background: color-mix(in srgb, var(--mrc-success) 15%, transparent);
+  color: #16a34a;
+}
+
+.mrc-import-err {
+  background: color-mix(in srgb, var(--mrc-warning) 15%, transparent);
+  color: #dc2626;
 }

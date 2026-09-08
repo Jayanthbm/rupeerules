@@ -1,11 +1,14 @@
 # RupeeRules 💰
 
-Personal finance calculator tailored for Indian salary earners to budget spending, manage debt, and plan long-term wealth targets.
+Personal finance budgeting ledger and money rules calculator tailored for Indian salary earners (`₹`, `en-IN` lakhs/crores formatting).
 
 ---
 
 ## Features
 
+- **Multi-Month Budgeting & History**:
+  - Track financial records across past and upcoming months (`YYYY-MM`).
+  - **Copy from previous month** to pre-fill recurring expenses and SIPs.
 - **Spending Breakdown**:
   - **Essential Expenses**: Max 55% (rent, EMI, groceries, transport)
   - **Guilt-Free Money**: 5% for discretionary spending
@@ -15,10 +18,16 @@ Personal finance calculator tailored for Indian salary earners to budget spendin
 - **Wealth Targets & Safety Caps**:
   - **Max Total EMI**: Hard cap at 40% of monthly salary
   - **Emergency Fund**: 6 months salary buffer in liquid assets
-  - **Income Replacement Corpus (FIRE number)**: Target 120× monthly salary
-- **Financial Health Score**: Dynamic score and feedback based on user allocations and progress.
+  - **Income Replacement Corpus (FIRE number)**: Target 120× monthly salary with timeline estimates
+- **Interactive Itemized Breakdowns**:
+  - Custom category names, `+ Add item`, `× Remove item`, and real-time subtotal summation.
+- **Analytics & Reports Dashboard**:
+  - Month-over-month trend table, average wealth/savings rate, and total tracked allocations.
+- **Data Backup & Portability**:
+  - 100% offline local privacy with JSON export download and backup file restoration.
+- **PWA & Offline Support**:
+  - Progressive Web App with Service Worker for offline operation.
 - **Dark Mode Support**: Seamless toggle between light and dark themes.
-- **Offline & Persistent**: Local storage persistence for entered financial data.
 
 ---
 
