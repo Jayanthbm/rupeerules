@@ -23,6 +23,12 @@ export const SPENDING_RULES = [
     note: "Spend it however you want — no guilt allowed.",
     color: "#7c3aed",
     bg: "rgba(124,58,237,0.12)",
+    defaultItems: [
+      { id: "s2_dining", name: "Dining out & Cafes", amount: "" },
+      { id: "s2_shopping", name: "Shopping & Fashion", amount: "" },
+      { id: "s2_ott", name: "OTT & Subscriptions", amount: "" },
+      { id: "s2_hobbies", name: "Hobbies & Entertainment", amount: "" },
+    ],
   },
   {
     id: 3,
@@ -41,6 +47,12 @@ export const SPENDING_RULES = [
     note: "Save for a new bike, a wedding, a vacation — anything you're working towards.",
     color: "#d97706",
     bg: "rgba(217,119,6,0.12)",
+    defaultItems: [
+      { id: "s4_travel", name: "Vacation / Travel", amount: "" },
+      { id: "s4_gadget", name: "Gadgets / Electronics", amount: "" },
+      { id: "s4_festive", name: "Festivals & Gifts", amount: "" },
+      { id: "s4_other", name: "Special Milestones", amount: "" },
+    ],
   },
   {
     id: 5,
@@ -50,6 +62,12 @@ export const SPENDING_RULES = [
     note: "Invest this every month to build lasting wealth. Put it to work.",
     color: "#059669",
     bg: "rgba(5,150,105,0.12)",
+    defaultItems: [
+      { id: "s5_sip", name: "Index / Mutual Fund SIPs", amount: "" },
+      { id: "s5_stocks", name: "Direct Stocks", amount: "" },
+      { id: "s5_ppf", name: "PPF / NPS / VPF", amount: "" },
+      { id: "s5_gold", name: "Gold / SGB / Digital Gold", amount: "" },
+    ],
   },
 ];
 
@@ -62,6 +80,12 @@ export const WEALTH_RULES = [
     note: "Calculated as Monthly salary × 0.40. Maximum ceiling across all combined monthly loan EMIs to avoid debt stress.",
     color: "#6b21a8",
     bg: "rgba(107,33,168,0.12)",
+    defaultItems: [
+      { id: "w1_home", name: "Home Loan EMI", amount: "" },
+      { id: "w1_car", name: "Car / Two-wheeler EMI", amount: "" },
+      { id: "w1_personal", name: "Personal Loan / Credit Card EMI", amount: "" },
+      { id: "w1_edu", name: "Education / Other Loan EMI", amount: "" },
+    ],
   },
   {
     id: 7,
