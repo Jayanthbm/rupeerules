@@ -1,16 +1,66 @@
-# React + Vite
+# RupeeRules 💰
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Personal finance calculator tailored for Indian salary earners to budget spending, manage debt, and plan long-term wealth targets.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- **Spending Breakdown**:
+  - **Essential Expenses**: Max 55% (rent, EMI, groceries, transport)
+  - **Guilt-Free Money**: 5% for discretionary spending
+  - **Debt Payoff / Investing**: 10% towards debt repayment or investments
+  - **Short-Term Goals**: 15% for upcoming milestones (travel, wedding, gadgets)
+  - **Long-Term Wealth**: 15% recurring monthly investment
+- **Wealth Targets & Safety Caps**:
+  - **Income Replacement Corpus**: Target 120× monthly salary
+  - **Emergency Fund**: 6 months salary buffer in liquid assets
+  - **Max Total EMI**: Hard cap at 40% of monthly salary
+- **Financial Health Score**: Dynamic score and feedback based on user allocations and progress.
+- **Dark Mode Support**: Seamless toggle between light and dark themes.
+- **Offline & Persistent**: Local storage persistence for entered financial data.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **React 19**
+- **Vite**
+- **Vanilla CSS**
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher recommended)
+- npm
+
+### Installation
+
+```bash
+npm install
+```
+
+### Development
+
+Run the local development server:
+
+```bash
+npm run dev
+```
+
+### Build
+
+Create the production build:
+
+```bash
+npm run build
+```
+
+### Lint
+
+```bash
+npm run lint
+```
