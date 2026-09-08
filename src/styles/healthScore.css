@@ -1,0 +1,130 @@
+/* --- Health Score Card --- */
+
+.mrc-health-score {
+  margin-top: 16px;
+}
+
+.mrc-health-card {
+  background: var(--mrc-bg-secondary);
+  border: 1px solid var(--mrc-border);
+  border-radius: 16px;
+  padding: 20px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.mrc-health-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mrc-health-emoji {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.mrc-health-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mrc-health-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mrc-text);
+}
+
+.mrc-health-sub {
+  font-size: 12px;
+  color: var(--mrc-text-muted);
+}
+
+.mrc-health-score-wrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.mrc-health-score-ring {
+  flex-shrink: 0;
+}
+
+.mrc-health-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.mrc-health-status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.mrc-health-desc {
+  margin: 8px 0 12px;
+  font-size: 13px;
+  color: var(--mrc-text-muted);
+  line-height: 1.5;
+}
+
+/* --- Breakdown Bar --- */
+
+.mrc-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mrc-breakdown-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--mrc-border);
+}
+
+.mrc-breakdown-seg {
+  height: 100%;
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mrc-breakdown-good {
+  background: var(--mrc-success);
+}
+
+.mrc-breakdown-info {
+  background: var(--mrc-accent);
+}
+
+.mrc-breakdown-warn {
+  background: var(--mrc-warning);
+}
+
+.mrc-breakdown-pending {
+  background: var(--mrc-text-subtle);
+}
+
+.mrc-breakdown-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mrc-breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--mrc-text-muted);
+}
+
+.mrc-breakdown-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}

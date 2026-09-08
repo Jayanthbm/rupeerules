@@ -1,0 +1,82 @@
+export const SPENDING_RULES = [
+  {
+    id: 1,
+    title: "Essential expenses (max)",
+    subtitle: "rent / EMI · groceries · transport",
+    multiplier: 0.55,
+    note: "Max you should spend on essentials.",
+    color: "#2563eb",
+    bg: "rgba(37,99,235,0.12)",
+  },
+  {
+    id: 2,
+    title: "Guilt-free money",
+    subtitle: "spend it any way you want",
+    multiplier: 0.05,
+    note: "Spend it however you want — no guilt allowed.",
+    color: "#7c3aed",
+    bg: "rgba(124,58,237,0.12)",
+  },
+  {
+    id: 3,
+    title: "Debt payoff / investing",
+    subtitle: "debt first · then invest",
+    multiplier: 0.10,
+    note: "If you have debt, target this to pay it off. If debt-free, invest it.",
+    color: "#dc2626",
+    bg: "rgba(220,38,38,0.12)",
+  },
+  {
+    id: 4,
+    title: "Short-term goals",
+    subtitle: "bike · wedding · vacation",
+    multiplier: 0.15,
+    note: "Save for a new bike, a wedding, a vacation — anything you're working towards.",
+    color: "#d97706",
+    bg: "rgba(217,119,6,0.12)",
+  },
+  {
+    id: 5,
+    title: "Long-term wealth",
+    subtitle: "invest every month",
+    multiplier: 0.15,
+    note: "Invest this every month to build lasting wealth. Put it to work.",
+    color: "#059669",
+    bg: "rgba(5,150,105,0.12)",
+  },
+];
+
+export const WEALTH_RULES = [
+  {
+    id: 6,
+    title: "Corpus to replace income",
+    subtitle: "MFs · Stocks · EPF/PPF/NPS · FDs · Gold",
+    inputLabel: "Total invested (MFs + Stocks + PF + FDs):",
+    multiplier: 120,
+    note: "Calculated as Monthly salary × 120. Enter your total portfolio: Mutual Funds, Stocks, EPF, PPF, NPS, FDs, and Gold (exclude primary home).",
+    color: "#ca8a04",
+    bg: "rgba(202,138,4,0.12)",
+    suffix: "×",
+  },
+  {
+    id: 7,
+    title: "Emergency fund",
+    subtitle: "6 months safety buffer · FDs / liquid funds",
+    multiplier: 6,
+    note: "Calculated as Monthly salary × 6. Parked in high-liquidity assets (FDs, liquid mutual funds) for medical emergencies or job loss.",
+    color: "#be185d",
+    bg: "rgba(190,24,93,0.12)",
+    suffix: "×",
+  },
+  {
+    id: 8,
+    title: "Max total EMI",
+    subtitle: "home + car + personal loans · 40% cap",
+    multiplier: 0.4,
+    note: "Calculated as Monthly salary × 0.40. Maximum ceiling across all combined monthly loan EMIs to avoid debt stress.",
+    color: "#6b21a8",
+    bg: "rgba(107,33,168,0.12)",
+  },
+];
+
+export const ALL_RULES = [...SPENDING_RULES, ...WEALTH_RULES];

@@ -1,0 +1,142 @@
+.mrc-input-section {
+  background: var(--mrc-bg-secondary);
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid var(--mrc-border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.mrc-field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mrc-text-muted);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.mrc-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--mrc-input-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 12px;
+  padding: 4px 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
+}
+
+.mrc-input-row:focus-within {
+  border-color: var(--mrc-border-focus);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.mrc-input-prefix {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--mrc-text-muted);
+}
+
+.mrc-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--mrc-text);
+  outline: none;
+  padding: 8px 0;
+  font-family: inherit;
+  min-width: 0;
+  text-align: right;
+}
+
+.mrc-input::placeholder {
+  color: var(--mrc-text-subtle);
+  font-weight: 400;
+}
+
+.mrc-input-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mrc-input-hint {
+  margin: 0;
+  font-size: 14px;
+  color: var(--mrc-text-muted);
+}
+
+.mrc-emphasized {
+  font-weight: 600;
+  color: var(--mrc-accent);
+}
+
+.mrc-calculate-btn {
+  padding: 8px 16px;
+  background: var(--mrc-accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mrc-calculate-btn:hover {
+  background: color-mix(in srgb, var(--mrc-accent) 85%, black);
+  transform: translateY(-1px);
+}
+
+.mrc-calculate-btn:active {
+  transform: translateY(0);
+}
+
+/* --- Empty state --- */
+
+.mrc-empty {
+  display: flex;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.mrc-empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 320px;
+}
+
+.mrc-empty-icon {
+  width: 56px;
+  height: 56px;
+  color: var(--mrc-text-subtle);
+  margin-bottom: 8px;
+}
+
+.mrc-empty-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.mrc-empty-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--mrc-text);
+}
+
+.mrc-empty-desc {
+  margin: 0;
+  font-size: 14px;
+  color: var(--mrc-text-muted);
+  line-height: 1.5;
+}

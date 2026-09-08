@@ -1,0 +1,87 @@
+.mrc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--mrc-border);
+  transition: border-color 0.3s ease;
+}
+
+.mrc-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mrc-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mrc-logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.5px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.mrc-logo-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--mrc-text);
+  letter-spacing: -0.3px;
+}
+
+.mrc-tagline {
+  margin: 0;
+  font-size: 13px;
+  color: var(--mrc-text-muted);
+}
+
+.mrc-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.mrc-dark-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--mrc-border);
+  border-radius: 10px;
+  background: var(--mrc-bg-secondary);
+  color: var(--mrc-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mrc-dark-toggle:hover {
+  background: var(--mrc-bg-tertiary);
+  border-color: var(--mrc-accent);
+  transform: scale(1.05);
+}
+
+.mrc-dark-toggle:active {
+  transform: scale(0.95);
+}
+
+.mrc-dark-toggle svg {
+  transition: transform 0.3s ease;
+}
+
+.mrc-dark-toggle:hover svg {
+  transform: rotate(15deg);
+}

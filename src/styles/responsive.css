@@ -1,0 +1,139 @@
+/* ============================================================
+   Mobile Responsive Adjustments
+   ============================================================ */
+
+@media (max-width: 640px) {
+  .mrc-shell {
+    padding: 20px 14px 48px;
+    gap: 16px;
+  }
+
+  .mrc-header {
+    align-items: center;
+  }
+
+  .mrc-logo-mark {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .mrc-logo-text {
+    font-size: 17px;
+  }
+
+  .mrc-tagline {
+    font-size: 12px;
+  }
+
+  .mrc-input-section {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .mrc-input-row {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+
+  .mrc-input {
+    font-size: 18px;
+    padding: 6px 0;
+  }
+
+  .mrc-calculate-btn {
+    padding: 7px 12px;
+    font-size: 13px;
+  }
+
+  .mrc-health-score-wrap {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+  }
+
+  .mrc-health-details {
+    width: 100%;
+  }
+
+  .mrc-health-breakdown {
+    margin-top: 8px;
+  }
+
+  .mrc-breakdown-legend {
+    justify-content: center;
+  }
+
+  .mrc-rule {
+    padding: 14px 12px;
+  }
+
+  .mrc-rule-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 10px;
+    row-gap: 8px;
+  }
+
+  .mrc-rule-badge {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .mrc-rule-title-block {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .mrc-rule-amount-block {
+    grid-column: 2;
+    grid-row: 2;
+    align-items: baseline;
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .mrc-rule-amount {
+    font-size: 18px;
+  }
+
+  .mrc-actual-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .mrc-actual-input-wrap {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .mrc-diff {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+
+  .mrc-tabs {
+    gap: 4px;
+  }
+
+  .mrc-tab {
+    padding: 8px 10px;
+    font-size: 13px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .mrc-tab-count {
+    margin-left: 0;
+    font-size: 11px;
+  }
+
+  .mrc-clear-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
