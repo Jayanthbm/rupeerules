@@ -38,6 +38,12 @@ export const SPENDING_RULES = [
     note: "If you have debt, target this to pay it off. If debt-free, invest it.",
     color: "#dc2626",
     bg: "rgba(220,38,38,0.12)",
+    defaultItems: [
+      { id: "s3_extra_debt", name: "Credit Card / Personal Loan Prepayment", amount: "" },
+      { id: "s3_extra_emi", name: "Extra Home/Car Loan Prepayment", amount: "" },
+      { id: "s3_invest_equity", name: "Extra Index / Mutual Funds (if debt-free)", amount: "" },
+      { id: "s3_invest_debt", name: "Short-term Debt Funds / Arbitrage", amount: "" },
+    ],
   },
   {
     id: 4,
