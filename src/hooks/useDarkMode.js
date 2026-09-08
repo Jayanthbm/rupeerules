@@ -20,6 +20,9 @@ export function useDarkMode() {
     } catch {
       // Ignore storage errors
     }
+    const theme = darkMode ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", theme);
+    document.body.setAttribute("data-theme", theme);
   }, [darkMode]);
 
   useEffect(() => {

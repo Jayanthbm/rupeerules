@@ -453,3 +453,115 @@
 .mrc-clear-btn:active {
   transform: scale(0.97);
 }
+
+/* --- Spending Allocation Summary Banner --- */
+
+.mrc-allocation-summary {
+  background: var(--mrc-bg-secondary);
+  border: 1px solid var(--mrc-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.mrc-alloc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mrc-alloc-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mrc-alloc-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mrc-text);
+}
+
+.mrc-alloc-percent {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--mrc-bg-tertiary);
+  color: var(--mrc-text-muted);
+}
+
+.mrc-alloc-diff-pill {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mrc-alloc-under .mrc-alloc-diff-pill {
+  color: var(--mrc-accent);
+}
+
+.mrc-alloc-exact .mrc-alloc-diff-pill {
+  color: var(--mrc-success);
+}
+
+.mrc-alloc-over .mrc-alloc-diff-pill {
+  color: var(--mrc-warning);
+}
+
+.mrc-alloc-bar {
+  height: 8px;
+  background: var(--mrc-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mrc-alloc-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.mrc-alloc-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--mrc-text-muted);
+}
+
+/* --- FIRE projection note inside W3 card --- */
+
+.mrc-fire-estimate {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: color-mix(in srgb, var(--rule-color) 10%, var(--mrc-bg-secondary));
+  border: 1px dashed color-mix(in srgb, var(--rule-color) 40%, transparent);
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-top: 4px;
+}
+
+.mrc-fire-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--rule-color);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mrc-fire-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--mrc-text-muted);
+}
+
+.mrc-fire-text strong {
+  color: var(--mrc-text);
+}
+

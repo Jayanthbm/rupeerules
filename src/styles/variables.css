@@ -1,4 +1,6 @@
-:root {
+:root,
+html,
+body {
   --mrc-bg: #ffffff;
   --mrc-bg-secondary: #f9fafb;
   --mrc-bg-tertiary: #f3f4f6;
@@ -15,7 +17,9 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-mrc-theme="light"]) {
+  :root:not([data-theme="light"]),
+  html:not([data-theme="light"]),
+  body:not([data-theme="light"]) {
     --mrc-bg: #0f1117;
     --mrc-bg-secondary: #161822;
     --mrc-bg-tertiary: #1c1f2e;
@@ -28,6 +32,9 @@
   }
 }
 
+:root[data-theme="dark"],
+html[data-theme="dark"],
+body[data-theme="dark"],
 .mrc-shell[data-theme="dark"] {
   --mrc-bg: #0f1117;
   --mrc-bg-secondary: #161822;
@@ -40,6 +47,9 @@
   --mrc-input-bg: #161822;
 }
 
+:root[data-theme="light"],
+html[data-theme="light"],
+body[data-theme="light"],
 .mrc-shell[data-theme="light"] {
   --mrc-bg: #ffffff;
   --mrc-bg-secondary: #f9fafb;

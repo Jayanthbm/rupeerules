@@ -41,6 +41,7 @@ export default function MoneyRulesCalculator() {
         <RulesTabSection
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          salary={salaryTransition}
           ruleMap={ruleMap}
           onActualChange={updateActual}
           onClearAll={handleClearAll}

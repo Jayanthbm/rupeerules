@@ -2,7 +2,7 @@ import NumberTicker from "./NumberTicker";
 import { CURRENCY, formatMoney, badgeLabel } from "../utils/formatters";
 import { getRuleFeedback } from "../utils/feedback";
 
-export default function RuleCard({ rule, item, onActualChange }) {
+export default function RuleCard({ rule, item, onActualChange, ruleMap }) {
   const hasActual = item.actualRaw !== "" && item.actualRaw !== undefined && item.actualRaw !== null;
   const feedback = hasActual ? getRuleFeedback(rule.id, item.status, item.actual, item.recommended) : null;
 
@@ -115,11 +115,19 @@ export default function RuleCard({ rule, item, onActualChange }) {
           )}
         </div>
 
+        {rule.id === 8 && item.recommended > 0 && (
+          <div className="mrc-fire-estimate">
+            <div className="mrc-fire-badge">🔥 FIRE Projection</div>
+            <div className="mrc-fire-text">
+              At standard 15% monthly investing (<strong>{formatMoney(ruleMap ? (ruleMap[5]?.actual || ruleMap[5]?.recommended || 0) : 0)}/mo</strong> at ~12% CAGR), target is reached in approximately <strong>17–19 years</strong> from scratch.
+            </div>
+          </div>
+        )}
+
         {rule.note && (
           <div className="mrc-rule-formula">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
               <circle cx="12" cy="12" r="10" />
-              <path d="M12 16v-4M12 8h.01" />
             </svg>
             <span>{rule.note}</span>
           </div>

@@ -1,9 +1,11 @@
 import RuleCard from "./RuleCard";
+import SpendingAllocationSummary from "./SpendingAllocationSummary";
 import { SPENDING_RULES, WEALTH_RULES } from "../rules";
 
 export default function RulesTabSection({
   activeTab,
   setActiveTab,
+  salary,
   ruleMap,
   onActualChange,
   onClearAll,
@@ -31,6 +33,7 @@ export default function RulesTabSection({
 
       {activeTab === "spending" && (
         <section className="mrc-section">
+          <SpendingAllocationSummary salary={salary} ruleMap={ruleMap} />
           <ol className="mrc-rules-list">
             {SPENDING_RULES.map((rule) => {
               const item = ruleMap[rule.id];
@@ -40,6 +43,7 @@ export default function RulesTabSection({
                   key={rule.id}
                   rule={rule}
                   item={item}
+                  ruleMap={ruleMap}
                   onActualChange={onActualChange}
                 />
               );
@@ -59,6 +63,7 @@ export default function RulesTabSection({
                   key={rule.id}
                   rule={rule}
                   item={item}
+                  ruleMap={ruleMap}
                   onActualChange={onActualChange}
                 />
               );
