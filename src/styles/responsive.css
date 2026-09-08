@@ -158,4 +158,46 @@
     width: 100%;
     justify-content: center;
   }
+
+  /* Modal Responsive Improvements */
+  .mrc-modal-content {
+    max-height: 92vh;
+    border-radius: 12px;
+  }
+
+  .mrc-modal-header {
+    padding: 14px 16px;
+  }
+
+  .mrc-modal-header h2 {
+    font-size: 16px;
+  }
+
+  .mrc-modal-body {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .mrc-reports-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .mrc-report-stat-card {
+    padding: 10px 12px;
+  }
+
+  .mrc-report-table th,
+  .mrc-report-table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .mrc-rules-ref-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mrc-backup-actions-grid {
+    grid-template-columns: 1fr;
+  }
 }

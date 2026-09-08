@@ -162,7 +162,7 @@ export default function ReportsModal({ isOpen, onClose, store }) {
                   {SPENDING_RULES.map((rule) => (
                     <div key={rule.id} className="mrc-rules-ref-item" style={{ "--item-color": rule.color }}>
                       <span className="mrc-ref-badge" style={{ backgroundColor: rule.color }}>
-                        {rule.multiplier * 100}%
+                        {Math.round(rule.multiplier * 100)}%
                       </span>
                       <div className="mrc-ref-info">
                         <strong>{rule.title}</strong>
