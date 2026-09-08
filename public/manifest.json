@@ -1,0 +1,23 @@
+{
+  "name": "RupeeRules - Money Rules Calculator",
+  "short_name": "RupeeRules",
+  "description": "Personal finance take-home pay rules calculator tailored for Indian salary earners",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-512.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "48x48",
+      "type": "image/svg+xml"
+    }
+  ]
+}
