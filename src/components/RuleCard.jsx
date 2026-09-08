@@ -15,6 +15,7 @@ export default function RuleCard({
 }) {
   const hasBreakdownOption = Boolean(rule.defaultItems);
   const [showBreakdown, setShowBreakdown] = useState(() => hasBreakdownOption);
+  const [isBreakdownCollapsed, setIsBreakdownCollapsed] = useState(false);
 
   const hasActual = item.actualRaw !== "" && item.actualRaw !== undefined && item.actualRaw !== null;
   const feedback = hasActual ? getRuleFeedback(rule.id, item.status, item.actual, item.recommended) : null;
@@ -82,54 +83,94 @@ export default function RuleCard({
         {/* Itemized breakdown if enabled */}
         {hasBreakdownOption && showBreakdown ? (
           <div className="mrc-breakdown-container">
-            <div className="mrc-breakdown-list">
-              {currentBreakdownList.map((subItem) => (
-                <div key={subItem.id} className="mrc-breakdown-row">
-                  <input
-                    type="text"
-                    className="mrc-breakdown-name-input"
-                    value={subItem.name}
-                    placeholder="Expense item (e.g. Rent, EMI)"
-                    onChange={(e) => onUpdateBreakdownItem(rule.id, subItem.id, "name", e.target.value)}
-                  />
-                  <div className="mrc-breakdown-amount-wrap">
-                    <span className="mrc-actual-prefix">{CURRENCY}</span>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      className="mrc-breakdown-amount-input"
-                      value={subItem.amount === "" ? "" : String(subItem.amount)}
-                      placeholder="0"
-                      onChange={(e) => onUpdateBreakdownItem(rule.id, subItem.id, "amount", e.target.value)}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    className="mrc-breakdown-del-btn"
-                    onClick={() => onRemoveBreakdownItem(rule.id, subItem.id)}
-                    title="Remove item"
-                    aria-label="Remove item"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div className="mrc-breakdown-footer">
-              <button
-                type="button"
-                className="mrc-breakdown-add-btn"
-                onClick={() => onAddBreakdownItem(rule.id)}
-              >
-                + Add item
-              </button>
-
-              <div className="mrc-breakdown-total">
-                <span>Subtotal:</span>
+            <div
+              className="mrc-breakdown-subtotal-header"
+              onClick={() => setIsBreakdownCollapsed((prev) => !prev)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  setIsBreakdownCollapsed((prev) => !prev);
+                }
+              }}
+              title={isBreakdownCollapsed ? "Expand breakdown items" : "Collapse breakdown items"}
+            >
+              <div className="mrc-breakdown-header-left">
+                <svg
+                  className={`mrc-collapse-chevron ${isBreakdownCollapsed ? "mrc-chevron-collapsed" : ""}`}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  width="14"
+                  height="14"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+                <span className="mrc-breakdown-header-label">
+                  Itemized Subtotal ({currentBreakdownList.length} items):
+                </span>
+              </div>
+              <div className="mrc-breakdown-header-val">
                 <strong>{item.actual > 0 ? formatMoney(item.actual) : "₹0"}</strong>
+                <span className="mrc-collapse-pill">
+                  {isBreakdownCollapsed ? "Expand" : "Collapse"}
+                </span>
               </div>
             </div>
+
+            {!isBreakdownCollapsed && (
+              <>
+                <div className="mrc-breakdown-list">
+                  {currentBreakdownList.map((subItem) => (
+                    <div key={subItem.id} className="mrc-breakdown-row">
+                      <input
+                        type="text"
+                        className="mrc-breakdown-name-input"
+                        value={subItem.name}
+                        placeholder="Expense item (e.g. Rent, EMI)"
+                        onChange={(e) => onUpdateBreakdownItem(rule.id, subItem.id, "name", e.target.value)}
+                      />
+                      <div className="mrc-breakdown-amount-wrap">
+                        <span className="mrc-actual-prefix">{CURRENCY}</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          className="mrc-breakdown-amount-input"
+                          value={subItem.amount === "" ? "" : String(subItem.amount)}
+                          placeholder="0"
+                          onChange={(e) => onUpdateBreakdownItem(rule.id, subItem.id, "amount", e.target.value)}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        className="mrc-breakdown-del-btn"
+                        onClick={() => onRemoveBreakdownItem(rule.id, subItem.id)}
+                        title="Remove item"
+                        aria-label="Remove item"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mrc-breakdown-footer">
+                  <button
+                    type="button"
+                    className="mrc-breakdown-add-btn"
+                    onClick={() => onAddBreakdownItem(rule.id)}
+                  >
+                    + Add item
+                  </button>
+
+                  <div className="mrc-breakdown-total">
+                    <span>Subtotal:</span>
+                    <strong>{item.actual > 0 ? formatMoney(item.actual) : "₹0"}</strong>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           /* Single Total input */

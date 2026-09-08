@@ -603,6 +603,64 @@
   animation: fadeIn 0.2s ease-out;
 }
 
+.mrc-breakdown-subtotal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--mrc-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.mrc-breakdown-subtotal-header:hover {
+  border-color: var(--rule-color);
+  background: color-mix(in srgb, var(--rule-color) 6%, transparent);
+}
+
+.mrc-breakdown-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mrc-text);
+}
+
+.mrc-collapse-chevron {
+  color: var(--rule-color);
+  transition: transform 0.2s ease;
+}
+
+.mrc-chevron-collapsed {
+  transform: rotate(-90deg);
+}
+
+.mrc-breakdown-header-val {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mrc-breakdown-header-val strong {
+  font-size: 13px;
+  color: var(--rule-color);
+}
+
+.mrc-collapse-pill {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--mrc-text-muted);
+  background: var(--mrc-bg-secondary);
+  border: 1px solid var(--mrc-border);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
 .mrc-breakdown-list {
   display: flex;
   flex-direction: column;
