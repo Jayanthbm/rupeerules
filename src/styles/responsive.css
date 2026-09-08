@@ -193,8 +193,24 @@
     font-size: 12px;
   }
 
-  .mrc-rules-ref-grid {
-    grid-template-columns: 1fr;
+  .mrc-wealth-tab-pill-group {
+    width: 100%;
+  }
+
+  .mrc-wealth-pill {
+    flex: 1;
+    text-align: center;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .mrc-chart-bars-wrap {
+    gap: 10px;
+    padding: 8px 4px;
+  }
+
+  .mrc-chart-col {
+    min-width: 65px;
   }
 
   .mrc-backup-actions-grid {

@@ -6,12 +6,12 @@ import MonthPicker from "./components/MonthPicker";
 import SalaryInput from "./components/SalaryInput";
 import EmptyState from "./components/EmptyState";
 import RulesTabSection from "./components/RulesTabSection";
-import ReportsModal from "./components/ReportsModal";
+import ReportsPage from "./components/ReportsPage";
 import BackupModal from "./components/BackupModal";
 
 export default function MoneyRulesCalculator() {
   const [darkMode, setDarkMode] = useDarkMode();
-  const [showReports, setShowReports] = useState(false);
+  const [currentView, setCurrentView] = useState("calculator"); // 'calculator' | 'reports'
   const [showBackup, setShowBackup] = useState(false);
 
   const {
@@ -40,48 +40,52 @@ export default function MoneyRulesCalculator() {
     <div className="mrc-shell" data-theme={darkMode ? "dark" : "light"}>
       <Header
         darkMode={darkMode}
+        currentView={currentView}
         onToggleDarkMode={() => setDarkMode((prev) => !prev)}
-        onOpenReports={() => setShowReports(true)}
+        onOpenReports={() => setCurrentView((prev) => (prev === "reports" ? "calculator" : "reports"))}
         onOpenBackup={() => setShowBackup(true)}
       />
 
-      <MonthPicker
-        activeMonth={activeMonth}
-        onSwitchMonth={switchMonth}
-        onCopyPrevious={copyFromMonth}
-        months={store.months}
-      />
-
-      <SalaryInput
-        monthlySalary={monthlySalary}
-        salaryTransition={salaryTransition}
-        onSalaryChange={handleSalaryChange}
-        onSalaryCommit={handleSalaryCommit}
-        rulesWithAmounts={rulesWithAmounts}
-      />
-
-      {salaryTransition === 0 ? (
-        <EmptyState />
-      ) : (
-        <RulesTabSection
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          salary={salaryTransition}
-          ruleMap={ruleMap}
-          breakdownItems={breakdownItems}
-          onActualChange={updateActual}
-          onUpdateBreakdownItem={updateBreakdownItem}
-          onAddBreakdownItem={addBreakdownItem}
-          onRemoveBreakdownItem={removeBreakdownItem}
-          onClearAll={handleClearAll}
+      {currentView === "reports" ? (
+        <ReportsPage
+          store={store}
+          onBackToCalculator={() => setCurrentView("calculator")}
         />
-      )}
+      ) : (
+        <>
+          <MonthPicker
+            activeMonth={activeMonth}
+            onSwitchMonth={switchMonth}
+            onCopyPrevious={copyFromMonth}
+            months={store.months}
+          />
 
-      <ReportsModal
-        isOpen={showReports}
-        onClose={() => setShowReports(false)}
-        store={store}
-      />
+          <SalaryInput
+            monthlySalary={monthlySalary}
+            salaryTransition={salaryTransition}
+            onSalaryChange={handleSalaryChange}
+            onSalaryCommit={handleSalaryCommit}
+            rulesWithAmounts={rulesWithAmounts}
+          />
+
+          {salaryTransition === 0 ? (
+            <EmptyState />
+          ) : (
+            <RulesTabSection
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              salary={salaryTransition}
+              ruleMap={ruleMap}
+              breakdownItems={breakdownItems}
+              onActualChange={updateActual}
+              onUpdateBreakdownItem={updateBreakdownItem}
+              onAddBreakdownItem={addBreakdownItem}
+              onRemoveBreakdownItem={removeBreakdownItem}
+              onClearAll={handleClearAll}
+            />
+          )}
+        </>
+      )}
 
       <BackupModal
         isOpen={showBackup}
@@ -91,3 +95,4 @@ export default function MoneyRulesCalculator() {
     </div>
   );
 }
+
