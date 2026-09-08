@@ -64,3 +64,11 @@ npm run build
 ```bash
 npm run lint
 ```
+
+### Deploy
+
+Deploy directly to Cloudflare Pages:
+
+```bash
+npm run deploy
+```
