@@ -15,9 +15,13 @@ export default function MoneyRulesCalculator() {
     handleSalaryChange,
     handleSalaryCommit,
     updateActual,
+    updateBreakdownItem,
+    addBreakdownItem,
+    removeBreakdownItem,
     handleClearAll,
     rulesWithAmounts,
     ruleMap,
+    breakdownItems,
   } = useMoneyRules();
 
   return (
@@ -43,7 +47,11 @@ export default function MoneyRulesCalculator() {
           setActiveTab={setActiveTab}
           salary={salaryTransition}
           ruleMap={ruleMap}
+          breakdownItems={breakdownItems}
           onActualChange={updateActual}
+          onUpdateBreakdownItem={updateBreakdownItem}
+          onAddBreakdownItem={addBreakdownItem}
+          onRemoveBreakdownItem={removeBreakdownItem}
           onClearAll={handleClearAll}
         />
       )}

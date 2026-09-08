@@ -36,6 +36,21 @@ export function useMoneyRules() {
     return {};
   });
 
+  const [breakdownItems, setBreakdownItems] = useState(() => {
+    const saved = loadSavedState();
+    if (saved && !isStale(saved) && saved.items && typeof saved.items === "object") {
+      return saved.items;
+    }
+    // Initialize default templates from ALL_RULES
+    const initial = {};
+    for (const rule of ALL_RULES) {
+      if (rule.defaultItems) {
+        initial[rule.id] = rule.defaultItems;
+      }
+    }
+    return initial;
+  });
+
   const [activeTab, setActiveTab] = useState("spending");
 
   // Animate salaryTransition towards target salary
@@ -72,9 +87,9 @@ export function useMoneyRules() {
   // Sync to local storage
   useEffect(() => {
     if (salary > 0) {
-      saveState(salary, actuals);
+      saveState(salary, actuals, breakdownItems);
     }
-  }, [salary, actuals]);
+  }, [salary, actuals, breakdownItems]);
 
   const handleSalaryChange = useCallback((value) => {
     setMonthlySalary(value);
@@ -106,11 +121,92 @@ export function useMoneyRules() {
     }));
   }, []);
 
+  // Update item within a rule's breakdown
+  const updateBreakdownItem = useCallback((ruleId, itemId, field, rawValue) => {
+    setBreakdownItems((prev) => {
+      const currentList = prev[ruleId] || [];
+      const updatedList = currentList.map((item) => {
+        if (item.id === itemId) {
+          return { ...item, [field]: field === "amount" ? stripFormatting(rawValue) : rawValue };
+        }
+        return item;
+      });
+
+      // Recalculate sum of breakdown items and sync to actuals
+      let sum = 0;
+      let hasAnyValue = false;
+      for (const it of updatedList) {
+        if (it.amount !== "" && it.amount !== undefined) {
+          sum += Number(it.amount) || 0;
+          hasAnyValue = true;
+        }
+      }
+
+      setActuals((actPrev) => ({
+        ...actPrev,
+        [ruleId]: hasAnyValue ? sum : "",
+      }));
+
+      return {
+        ...prev,
+        [ruleId]: updatedList,
+      };
+    });
+  }, []);
+
+  const addBreakdownItem = useCallback((ruleId) => {
+    setBreakdownItems((prev) => {
+      const currentList = prev[ruleId] || [];
+      const newItem = {
+        id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        name: "",
+        amount: "",
+      };
+      return {
+        ...prev,
+        [ruleId]: [...currentList, newItem],
+      };
+    });
+  }, []);
+
+  const removeBreakdownItem = useCallback((ruleId, itemId) => {
+    setBreakdownItems((prev) => {
+      const currentList = prev[ruleId] || [];
+      const updatedList = currentList.filter((item) => item.id !== itemId);
+
+      let sum = 0;
+      let hasAnyValue = false;
+      for (const it of updatedList) {
+        if (it.amount !== "" && it.amount !== undefined) {
+          sum += Number(it.amount) || 0;
+          hasAnyValue = true;
+        }
+      }
+
+      setActuals((actPrev) => ({
+        ...actPrev,
+        [ruleId]: hasAnyValue ? sum : (updatedList.length === 0 ? "" : actPrev[ruleId]),
+      }));
+
+      return {
+        ...prev,
+        [ruleId]: updatedList,
+      };
+    });
+  }, []);
+
   const handleClearAll = useCallback(() => {
     setActuals({});
     setMonthlySalary("");
     setSalary(0);
     setSalaryTransition(0);
+    const initial = {};
+    for (const rule of ALL_RULES) {
+      if (rule.defaultItems) {
+        initial[rule.id] = rule.defaultItems;
+      }
+    }
+    setBreakdownItems(initial);
     clearSavedState();
   }, []);
 
@@ -182,11 +278,15 @@ export function useMoneyRules() {
     monthlySalary,
     salaryTransition,
     actuals,
+    breakdownItems,
     activeTab,
     setActiveTab,
     handleSalaryChange,
     handleSalaryCommit,
     updateActual,
+    updateBreakdownItem,
+    addBreakdownItem,
+    removeBreakdownItem,
     handleClearAll,
     rulesWithAmounts,
     ruleMap,

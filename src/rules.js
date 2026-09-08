@@ -7,6 +7,13 @@ export const SPENDING_RULES = [
     note: "Max you should spend on essentials.",
     color: "#2563eb",
     bg: "rgba(37,99,235,0.12)",
+    defaultItems: [
+      { id: "s1_rent", name: "Rent / Home EMI", amount: "" },
+      { id: "s1_groceries", name: "Groceries & Food", amount: "" },
+      { id: "s1_bills", name: "Utilities & Bills", amount: "" },
+      { id: "s1_transport", name: "Transport & Fuel", amount: "" },
+      { id: "s1_maint", name: "Maintenance & Misc", amount: "" },
+    ],
   },
   {
     id: 2,
@@ -64,6 +71,11 @@ export const WEALTH_RULES = [
     note: "Calculated as Monthly salary × 6. Parked in high-liquidity assets (FDs, liquid mutual funds) for medical emergencies or job loss.",
     color: "#be185d",
     bg: "rgba(190,24,93,0.12)",
+    defaultItems: [
+      { id: "w2_bank", name: "Bank Savings / FDs", amount: "" },
+      { id: "w2_liquid", name: "Liquid Mutual Funds", amount: "" },
+      { id: "w2_cash", name: "Cash / Short-term Buffer", amount: "" },
+    ],
   },
   {
     id: 8,
@@ -74,6 +86,12 @@ export const WEALTH_RULES = [
     note: "Calculated as Monthly salary × 120. Enter your total portfolio: Mutual Funds, Stocks, EPF, PPF, NPS, FDs, and Gold (exclude primary home).",
     color: "#ca8a04",
     bg: "rgba(202,138,4,0.12)",
+    defaultItems: [
+      { id: "w3_equity", name: "Mutual Funds & Stocks", amount: "" },
+      { id: "w3_pf", name: "EPF / PPF / NPS", amount: "" },
+      { id: "w3_fds", name: "Fixed Deposits & Bonds", amount: "" },
+      { id: "w3_gold", name: "Gold & SGBs", amount: "" },
+    ],
   },
 ];
 

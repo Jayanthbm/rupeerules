@@ -17,6 +17,17 @@ export function cleanActuals(actuals) {
   return cleaned;
 }
 
+export function cleanBreakdownItems(items) {
+  if (!items || typeof items !== "object") return {};
+  const cleaned = {};
+  for (const [ruleId, list] of Object.entries(items)) {
+    if (Array.isArray(list)) {
+      cleaned[ruleId] = list.filter((it) => it && (it.name || it.amount));
+    }
+  }
+  return cleaned;
+}
+
 export function loadSavedState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -31,11 +42,12 @@ export function loadSavedState() {
   return null;
 }
 
-export function saveState(salary, actuals) {
+export function saveState(salary, actuals, items) {
   try {
     const payload = {
       salary,
       actuals: cleanActuals(actuals),
+      items: cleanBreakdownItems(items),
       updatedAt: Date.now(),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));

@@ -7,7 +7,11 @@ export default function RulesTabSection({
   setActiveTab,
   salary,
   ruleMap,
+  breakdownItems,
   onActualChange,
+  onUpdateBreakdownItem,
+  onAddBreakdownItem,
+  onRemoveBreakdownItem,
   onClearAll,
 }) {
   return (
@@ -44,7 +48,11 @@ export default function RulesTabSection({
                   rule={rule}
                   item={item}
                   ruleMap={ruleMap}
+                  breakdownList={breakdownItems ? breakdownItems[rule.id] : null}
                   onActualChange={onActualChange}
+                  onUpdateBreakdownItem={onUpdateBreakdownItem}
+                  onAddBreakdownItem={onAddBreakdownItem}
+                  onRemoveBreakdownItem={onRemoveBreakdownItem}
                 />
               );
             })}
@@ -64,7 +72,11 @@ export default function RulesTabSection({
                   rule={rule}
                   item={item}
                   ruleMap={ruleMap}
+                  breakdownList={breakdownItems ? breakdownItems[rule.id] : null}
                   onActualChange={onActualChange}
+                  onUpdateBreakdownItem={onUpdateBreakdownItem}
+                  onAddBreakdownItem={onAddBreakdownItem}
+                  onRemoveBreakdownItem={onRemoveBreakdownItem}
                 />
               );
             })}
