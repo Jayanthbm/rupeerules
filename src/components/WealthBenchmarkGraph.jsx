@@ -47,12 +47,33 @@ export default function WealthBenchmarkGraph({
     1000
   );
 
+  // Determine current active benchmark note
+  const sampleRow = filteredBreakdowns.find((r) => r.salary > 0) || filteredBreakdowns[0] || {};
+  const dynamicCapLabel =
+    selectedMetric === "emergencyFund"
+      ? (sampleRow.emergencySource || "6× Monthly Salary")
+      : selectedMetric === "fireCorpus"
+      ? (sampleRow.fireSource || "120× Monthly Salary")
+      : activeMetricConfig.capLabel;
+
   return (
     <div className="mrc-report-section-card">
       <div className="mrc-wealth-report-head">
         <div>
           <h2>Wealth &amp; Obligations Benchmark Graph</h2>
-          <p className="mrc-report-subtext">{activeMetricConfig.desc}</p>
+          <p className="mrc-report-subtext">
+            {activeMetricConfig.desc}
+            {selectedMetric === "emergencyFund" && sampleRow.isEmergencyAdaptive && (
+              <span className="mrc-calc-mode-badge" style={{ marginLeft: "8px", background: "rgba(190,24,93,0.12)", color: "#be185d" }}>
+                🎯 Adaptive: 6-Mo Non-negotiable Expenses
+              </span>
+            )}
+            {selectedMetric === "fireCorpus" && sampleRow.isFireAdaptive && (
+              <span className="mrc-calc-mode-badge" style={{ marginLeft: "8px", background: "rgba(202,138,4,0.12)", color: "#ca8a04" }}>
+                🔥 Adaptive: 25× Annual Real Spending
+              </span>
+            )}
+          </p>
         </div>
         <div className="mrc-wealth-tab-pill-group">
           {WEALTH_METRICS.map((metric) => (
@@ -77,7 +98,7 @@ export default function WealthBenchmarkGraph({
           </span>
           <span className="mrc-legend-item">
             <span className="mrc-legend-line" />
-            Recommended Benchmark ({activeMetricConfig.capLabel})
+            Recommended Benchmark: <strong>{dynamicCapLabel}</strong>
           </span>
         </div>
 

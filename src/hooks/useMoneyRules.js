@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { ALL_RULES } from "../rules";
 import { formatSalaryInput, stripFormatting, formatMoney } from "../utils/formatters";
+import { computeReportsData } from "../utils/reports";
 import {
   loadAllData,
   saveAllData,
@@ -289,10 +290,50 @@ export function useMoneyRules() {
     setStore({ activeMonth: getCurrentMonthKey(), months: {} });
   }, []);
 
+  // Aggregate store reports to derive multi-month averages for adaptive benchmarks
+  const reportsData = useMemo(() => {
+    return computeReportsData(store?.months);
+  }, [store?.months]);
+
   // Compute rule items
   const rulesWithAmounts = useMemo(() => {
+    const { hasEmergencyAvg, hasFireAvg, avgEmergencyExpense, avgLivingExpense } = reportsData;
+
     return ALL_RULES.map((rule) => {
-      const recommended = salaryTransition * rule.multiplier;
+      let recommended = salaryTransition * rule.multiplier;
+      let dynamicNote = rule.note;
+      let adaptiveBadge = null;
+
+      if (rule.id === 7) {
+        if (hasEmergencyAvg && avgEmergencyExpense > 0) {
+          recommended = avgEmergencyExpense * 6;
+          dynamicNote = `Calculated as 6 × Avg Non-Negotiable Expenses (₹${avgEmergencyExpense.toLocaleString("en-IN")}/mo Essentials + EMIs based on ${reportsData.activeMonthCount || 3}+ months recorded data).`;
+          adaptiveBadge = {
+            icon: "🎯",
+            text: "Adaptive: 6-Mo Non-negotiable Expenses",
+            subtext: `Based on ₹${avgEmergencyExpense.toLocaleString("en-IN")}/mo average survival costs`,
+            color: "#be185d",
+            bg: "rgba(190,24,93,0.12)",
+          };
+        } else {
+          dynamicNote = `Calculated as Monthly salary × 6. (Track 3+ months to unlock adaptive benchmark based on real non-negotiable expenses).`;
+        }
+      } else if (rule.id === 8) {
+        if (hasFireAvg && avgLivingExpense > 0) {
+          recommended = avgLivingExpense * 12 * 25;
+          dynamicNote = `Calculated as 25 × Annual Real Expenses (₹${avgLivingExpense.toLocaleString("en-IN")}/mo avg living costs × 12 × 25 based on 4% safe withdrawal rule).`;
+          adaptiveBadge = {
+            icon: "🔥",
+            text: "Adaptive: 25× Annual Real Spending",
+            subtext: `Based on ₹${avgLivingExpense.toLocaleString("en-IN")}/mo average living expenses`,
+            color: "#ca8a04",
+            bg: "rgba(202,138,4,0.12)",
+          };
+        } else {
+          dynamicNote = `Calculated as Monthly salary × 120 (10× Annual Salary milestone). Track 6+ months to unlock adaptive 25× real living expenses FIRE target.`;
+        }
+      }
+
       const actual = actuals[rule.id] ?? 0;
       const actualNum = actual === "" ? 0 : Number(actual);
 
@@ -340,9 +381,11 @@ export function useMoneyRules() {
         progress,
         progressLabel,
         status,
+        note: dynamicNote,
+        adaptiveBadge,
       };
     });
-  }, [salaryTransition, actuals]);
+  }, [salaryTransition, actuals, reportsData]);
 
   const ruleMap = useMemo(() => {
     const map = {};

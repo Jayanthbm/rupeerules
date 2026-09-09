@@ -40,6 +40,19 @@ export default function RuleCard({
         <div className="mrc-rule-title-block">
           <div className="mrc-rule-title-row">
             <h3 className="mrc-rule-title">{rule.title}</h3>
+            {item.adaptiveBadge && (
+              <span
+                className="mrc-rule-adaptive-pill"
+                style={{
+                  backgroundColor: item.adaptiveBadge.bg,
+                  color: item.adaptiveBadge.color,
+                  borderColor: item.adaptiveBadge.color,
+                }}
+                title={item.adaptiveBadge.subtext}
+              >
+                {item.adaptiveBadge.icon} {item.adaptiveBadge.text}
+              </span>
+            )}
             {hasBreakdownOption && (
               <button
                 type="button"
@@ -50,7 +63,9 @@ export default function RuleCard({
               </button>
             )}
           </div>
-          <p className="mrc-rule-subtitle">{rule.subtitle}</p>
+          <p className="mrc-rule-subtitle">
+            {item.adaptiveBadge ? item.adaptiveBadge.subtext : rule.subtitle}
+          </p>
         </div>
         <div className="mrc-rule-amount-block">
           <div className="mrc-rule-amount">
@@ -287,12 +302,12 @@ export default function RuleCard({
           </div>
         )}
 
-        {rule.note && (
+        {(item.note || rule.note) && (
           <div className="mrc-rule-formula">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
               <circle cx="12" cy="12" r="10" />
             </svg>
-            <span>{rule.note}</span>
+            <span>{item.note || rule.note}</span>
           </div>
         )}
       </div>
