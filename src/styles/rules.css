@@ -731,6 +731,28 @@
   font-family: inherit;
 }
 
+.mrc-breakdown-row-linked {
+  background: color-mix(in srgb, var(--rule-color) 4%, transparent);
+  border-radius: 6px;
+  padding: 2px 4px;
+}
+
+.mrc-linked-source-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #be185d;
+  background: rgba(190, 24, 93, 0.12);
+  border: 1px solid rgba(190, 24, 93, 0.25);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.mrc-breakdown-amount-linked {
+  background: color-mix(in srgb, var(--mrc-border) 25%, transparent);
+  opacity: 0.85;
+}
+
 .mrc-breakdown-del-btn {
   background: transparent;
   border: none;

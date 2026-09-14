@@ -117,6 +117,7 @@ export const WEALTH_RULES = [
     color: "#ca8a04",
     bg: "rgba(202,138,4,0.12)",
     defaultItems: [
+      { id: "w3_emergency", name: "Emergency Fund (Liquid Reserves)", amount: "", isLinked: true },
       { id: "w3_equity", name: "Mutual Funds & Stocks", amount: "" },
       { id: "w3_pf", name: "EPF / PPF / NPS", amount: "" },
       { id: "w3_fds", name: "Fixed Deposits & Bonds", amount: "" },

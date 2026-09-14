@@ -137,37 +137,53 @@ export default function RuleCard({
             {!isBreakdownCollapsed && (
               <>
                 <div className="mrc-breakdown-list">
-                  {currentBreakdownList.map((subItem) => (
-                    <div key={subItem.id} className="mrc-breakdown-row">
-                      <input
-                        type="text"
-                        className="mrc-breakdown-name-input"
-                        value={subItem.name}
-                        placeholder="Expense item (e.g. Rent, EMI)"
-                        onChange={(e) => onUpdateBreakdownItem(rule.id, subItem.id, "name", e.target.value)}
-                      />
-                      <div className="mrc-breakdown-amount-wrap">
-                        <span className="mrc-actual-prefix">{CURRENCY}</span>
+                  {currentBreakdownList.map((subItem) => {
+                    const isLinkedItem = subItem.isLinked || subItem.id === "w3_emergency";
+                    return (
+                      <div
+                        key={subItem.id}
+                        className={`mrc-breakdown-row ${isLinkedItem ? "mrc-breakdown-row-linked" : ""}`}
+                      >
                         <input
                           type="text"
-                          inputMode="decimal"
-                          className="mrc-breakdown-amount-input"
-                          value={subItem.amount === "" ? "" : String(subItem.amount)}
-                          placeholder="0"
-                          onChange={(e) => onUpdateBreakdownItem(rule.id, subItem.id, "amount", e.target.value)}
+                          className="mrc-breakdown-name-input"
+                          value={subItem.name}
+                          placeholder="Asset item (e.g. Mutual Funds)"
+                          disabled={isLinkedItem}
+                          onChange={(e) => onUpdateBreakdownItem(rule.id, subItem.id, "name", e.target.value)}
                         />
+                        {isLinkedItem && (
+                          <span className="mrc-linked-source-badge" title="Auto-populated from Emergency Fund (Rule 7)">
+                            ⚡ Auto-synced
+                          </span>
+                        )}
+                        <div className={`mrc-breakdown-amount-wrap ${isLinkedItem ? "mrc-breakdown-amount-linked" : ""}`}>
+                          <span className="mrc-actual-prefix">{CURRENCY}</span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            className="mrc-breakdown-amount-input"
+                            value={subItem.amount === "" ? "" : String(subItem.amount)}
+                            placeholder="0"
+                            disabled={isLinkedItem}
+                            title={isLinkedItem ? "Auto-synced from Emergency Fund rule" : ""}
+                            onChange={(e) => onUpdateBreakdownItem(rule.id, subItem.id, "amount", e.target.value)}
+                          />
+                        </div>
+                        {!isLinkedItem && (
+                          <button
+                            type="button"
+                            className="mrc-breakdown-del-btn"
+                            onClick={() => onRemoveBreakdownItem(rule.id, subItem.id)}
+                            title="Remove item"
+                            aria-label="Remove item"
+                          >
+                            ×
+                          </button>
+                        )}
                       </div>
-                      <button
-                        type="button"
-                        className="mrc-breakdown-del-btn"
-                        onClick={() => onRemoveBreakdownItem(rule.id, subItem.id)}
-                        title="Remove item"
-                        aria-label="Remove item"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="mrc-breakdown-footer">

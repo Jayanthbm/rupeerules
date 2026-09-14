@@ -25,16 +25,32 @@ export function useMoneyRules() {
   const [actuals, setActuals] = useState(() => currentMonthData.actuals || {});
 
   const [breakdownItems, setBreakdownItems] = useState(() => {
-    if (currentMonthData.items && Object.keys(currentMonthData.items).length > 0) {
-      return currentMonthData.items;
-    }
-    const initial = {};
-    for (const rule of ALL_RULES) {
-      if (rule.defaultItems) {
-        initial[rule.id] = rule.defaultItems;
+    let items = currentMonthData.items;
+    if (!items || Object.keys(items).length === 0) {
+      items = {};
+      for (const rule of ALL_RULES) {
+        if (rule.defaultItems) {
+          items[rule.id] = rule.defaultItems;
+        }
       }
     }
-    return initial;
+
+    // Ensure Rule 8 has synced Emergency Fund item with current Rule 7 actuals
+    const efVal = Number(currentMonthData.actuals?.[7]) || 0;
+    const fireList = items[8] || [];
+    const hasEmergency = fireList.some((it) => it.id === "w3_emergency");
+    if (!hasEmergency) {
+      items[8] = [
+        { id: "w3_emergency", name: "Emergency Fund (Liquid Reserves)", amount: efVal > 0 ? efVal : "", isLinked: true },
+        ...fireList,
+      ];
+    } else {
+      items[8] = fireList.map((it) =>
+        it.id === "w3_emergency" ? { ...it, amount: efVal > 0 ? efVal : "", isLinked: true } : it
+      );
+    }
+
+    return items;
   });
 
   const [activeTab, setActiveTab] = useState("spending");
@@ -57,6 +73,21 @@ export function useMoneyRules() {
           newItems[rule.id] = rule.defaultItems;
         }
       }
+    }
+
+    // Ensure Emergency Fund row exists and is up to date in Rule 8
+    const efVal = Number(newActuals[7]) || 0;
+    const fireList = newItems[8] || [];
+    const hasEmergency = fireList.some((it) => it.id === "w3_emergency");
+    if (!hasEmergency) {
+      newItems[8] = [
+        { id: "w3_emergency", name: "Emergency Fund (Liquid Reserves)", amount: efVal > 0 ? efVal : "", isLinked: true },
+        ...fireList,
+      ];
+    } else {
+      newItems[8] = fireList.map((it) =>
+        it.id === "w3_emergency" ? { ...it, amount: efVal > 0 ? efVal : "", isLinked: true } : it
+      );
     }
 
     setSalary(newSalary);
@@ -82,6 +113,20 @@ export function useMoneyRules() {
     const copiedSalary = sourceData.salary || 0;
     const copiedActuals = { ...(sourceData.actuals || {}) };
     const copiedItems = JSON.parse(JSON.stringify(sourceData.items || {}));
+
+    const efVal = Number(copiedActuals[7]) || 0;
+    const fireList = copiedItems[8] || [];
+    const hasEmergency = fireList.some((it) => it.id === "w3_emergency");
+    if (!hasEmergency) {
+      copiedItems[8] = [
+        { id: "w3_emergency", name: "Emergency Fund (Liquid Reserves)", amount: efVal > 0 ? efVal : "", isLinked: true },
+        ...fireList,
+      ];
+    } else {
+      copiedItems[8] = fireList.map((it) =>
+        it.id === "w3_emergency" ? { ...it, amount: efVal > 0 ? efVal : "", isLinked: true } : it
+      );
+    }
 
     setSalary(copiedSalary);
     setSalaryTransition(copiedSalary);
@@ -181,14 +226,63 @@ export function useMoneyRules() {
     }
   }, [monthlySalary, salary]);
 
+  // Helper to sync rule 7 (Emergency Fund) into rule 8 (FIRE) breakdown item
+  const syncEmergencyToFire = useCallback((efAmount, currentBreakdowns) => {
+    const fireItems = currentBreakdowns[8] || [];
+    let updatedFireItems;
+    const hasEmergencyRow = fireItems.some((it) => it.id === "w3_emergency");
+
+    if (hasEmergencyRow) {
+      updatedFireItems = fireItems.map((it) => {
+        if (it.id === "w3_emergency") {
+          return { ...it, amount: efAmount > 0 ? efAmount : "" };
+        }
+        return it;
+      });
+    } else {
+      const defaultEmergencyRow = {
+        id: "w3_emergency",
+        name: "Emergency Fund (Liquid Reserves)",
+        amount: efAmount > 0 ? efAmount : "",
+        isLinked: true,
+      };
+      updatedFireItems = [defaultEmergencyRow, ...fireItems];
+    }
+
+    let fireSum = 0;
+    let hasAnyVal = false;
+    for (const it of updatedFireItems) {
+      if (it.amount !== "" && it.amount !== undefined) {
+        fireSum += Number(it.amount) || 0;
+        hasAnyVal = true;
+      }
+    }
+
+    return {
+      updatedFireItems,
+      fireActual: hasAnyVal ? fireSum : "",
+    };
+  }, []);
+
   const updateActual = useCallback((ruleId, rawValue) => {
     const cleaned = stripFormatting(rawValue);
     const value = cleaned === "" ? "" : Number(cleaned);
-    setActuals((prev) => ({
-      ...prev,
-      [ruleId]: value,
-    }));
-  }, []);
+
+    setActuals((prev) => {
+      const next = { ...prev, [ruleId]: value };
+
+      // If updating emergency fund actual directly, sync to FIRE
+      if (ruleId === 7) {
+        setBreakdownItems((bPrev) => {
+          const { updatedFireItems, fireActual } = syncEmergencyToFire(value || 0, bPrev);
+          next[8] = fireActual;
+          return { ...bPrev, 8: updatedFireItems };
+        });
+      }
+
+      return next;
+    });
+  }, [syncEmergencyToFire]);
 
   const updateBreakdownItem = useCallback((ruleId, itemId, field, rawValue) => {
     setBreakdownItems((prev) => {
@@ -209,17 +303,31 @@ export function useMoneyRules() {
         }
       }
 
-      setActuals((actPrev) => ({
-        ...actPrev,
-        [ruleId]: hasAnyValue ? sum : "",
-      }));
-
-      return {
+      const nextBreakdowns = {
         ...prev,
         [ruleId]: updatedList,
       };
+
+      setActuals((actPrev) => {
+        const nextActuals = {
+          ...actPrev,
+          [ruleId]: hasAnyValue ? sum : "",
+        };
+
+        // When Emergency Fund items (rule 7) update, automatically propagate sum to FIRE (rule 8)
+        if (ruleId === 7) {
+          const efTotal = hasAnyValue ? sum : 0;
+          const { updatedFireItems, fireActual } = syncEmergencyToFire(efTotal, nextBreakdowns);
+          nextBreakdowns[8] = updatedFireItems;
+          nextActuals[8] = fireActual;
+        }
+
+        return nextActuals;
+      });
+
+      return nextBreakdowns;
     });
-  }, []);
+  }, [syncEmergencyToFire]);
 
   const addBreakdownItem = useCallback((ruleId) => {
     setBreakdownItems((prev) => {
@@ -250,17 +358,30 @@ export function useMoneyRules() {
         }
       }
 
-      setActuals((actPrev) => ({
-        ...actPrev,
-        [ruleId]: hasAnyValue ? sum : (updatedList.length === 0 ? "" : actPrev[ruleId]),
-      }));
-
-      return {
+      const nextBreakdowns = {
         ...prev,
         [ruleId]: updatedList,
       };
+
+      setActuals((actPrev) => {
+        const nextActuals = {
+          ...actPrev,
+          [ruleId]: hasAnyValue ? sum : (updatedList.length === 0 ? "" : actPrev[ruleId]),
+        };
+
+        if (ruleId === 7) {
+          const efTotal = hasAnyValue ? sum : 0;
+          const { updatedFireItems, fireActual } = syncEmergencyToFire(efTotal, nextBreakdowns);
+          nextBreakdowns[8] = updatedFireItems;
+          nextActuals[8] = fireActual;
+        }
+
+        return nextActuals;
+      });
+
+      return nextBreakdowns;
     });
-  }, []);
+  }, [syncEmergencyToFire]);
 
   const reloadFromStore = useCallback(() => {
     const loaded = loadAllData();
