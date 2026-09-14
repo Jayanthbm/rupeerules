@@ -12,6 +12,7 @@ export default function RuleCard({
   onUpdateBreakdownItem,
   onAddBreakdownItem,
   onRemoveBreakdownItem,
+  onSortBreakdownItems,
 }) {
   const hasBreakdownOption = Boolean(rule.defaultItems);
   const [showBreakdown, setShowBreakdown] = useState(() => hasBreakdownOption);
@@ -30,6 +31,12 @@ export default function RuleCard({
   const currentBreakdownList = breakdownList && breakdownList.length > 0
     ? breakdownList
     : (rule.defaultItems || []);
+
+  const handleAmountBlur = () => {
+    if (typeof onSortBreakdownItems === "function") {
+      onSortBreakdownItems(rule.id);
+    }
+  };
 
   return (
     <li className="mrc-rule" style={{ "--rule-color": rule.color, "--rule-bg": rule.bg }}>
@@ -151,6 +158,7 @@ export default function RuleCard({
                           placeholder="Asset item (e.g. Mutual Funds)"
                           disabled={isLinkedItem}
                           onChange={(e) => onUpdateBreakdownItem(rule.id, subItem.id, "name", e.target.value)}
+                          onBlur={handleAmountBlur}
                         />
                         {isLinkedItem && (
                           <span className="mrc-linked-source-badge" title="Auto-populated from Emergency Fund (Rule 7)">
@@ -168,6 +176,7 @@ export default function RuleCard({
                             disabled={isLinkedItem}
                             title={isLinkedItem ? "Auto-synced from Emergency Fund rule" : ""}
                             onChange={(e) => onUpdateBreakdownItem(rule.id, subItem.id, "amount", e.target.value)}
+                            onBlur={handleAmountBlur}
                           />
                         </div>
                         {!isLinkedItem && (

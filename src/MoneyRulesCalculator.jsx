@@ -30,6 +30,7 @@ export default function MoneyRulesCalculator() {
     updateBreakdownItem,
     addBreakdownItem,
     removeBreakdownItem,
+    sortBreakdownItems,
     handleClearAll,
     rulesWithAmounts,
     ruleMap,
@@ -81,6 +82,7 @@ export default function MoneyRulesCalculator() {
               onUpdateBreakdownItem={updateBreakdownItem}
               onAddBreakdownItem={addBreakdownItem}
               onRemoveBreakdownItem={removeBreakdownItem}
+              onSortBreakdownItems={sortBreakdownItems}
               onClearAll={handleClearAll}
             />
           )}

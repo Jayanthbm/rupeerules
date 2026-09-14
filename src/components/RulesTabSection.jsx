@@ -12,6 +12,7 @@ export default function RulesTabSection({
   onUpdateBreakdownItem,
   onAddBreakdownItem,
   onRemoveBreakdownItem,
+  onSortBreakdownItems,
   onClearAll,
 }) {
   return (
@@ -53,6 +54,7 @@ export default function RulesTabSection({
                   onUpdateBreakdownItem={onUpdateBreakdownItem}
                   onAddBreakdownItem={onAddBreakdownItem}
                   onRemoveBreakdownItem={onRemoveBreakdownItem}
+                  onSortBreakdownItems={onSortBreakdownItems}
                 />
               );
             })}
@@ -77,6 +79,7 @@ export default function RulesTabSection({
                   onUpdateBreakdownItem={onUpdateBreakdownItem}
                   onAddBreakdownItem={onAddBreakdownItem}
                   onRemoveBreakdownItem={onRemoveBreakdownItem}
+                  onSortBreakdownItems={onSortBreakdownItems}
                 />
               );
             })}

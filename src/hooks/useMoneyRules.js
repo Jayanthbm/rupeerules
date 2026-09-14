@@ -11,6 +11,24 @@ import {
   cleanBreakdownItems,
 } from "../utils/storage";
 
+function sortItemList(list) {
+  if (!Array.isArray(list) || list.length <= 1) return list;
+  return [...list].sort((a, b) => {
+    const valA = (a && a.amount !== "" && a.amount !== undefined && a.amount !== null) ? Number(a.amount) : -1;
+    const valB = (b && b.amount !== "" && b.amount !== undefined && b.amount !== null) ? Number(b.amount) : -1;
+    return valB - valA;
+  });
+}
+
+function sortAllBreakdownItems(itemsMap) {
+  if (!itemsMap || typeof itemsMap !== "object") return {};
+  const sorted = {};
+  for (const [ruleId, list] of Object.entries(itemsMap)) {
+    sorted[ruleId] = sortItemList(list);
+  }
+  return sorted;
+}
+
 export function useMoneyRules() {
   const [store, setStore] = useState(() => loadAllData());
   const activeMonth = store.activeMonth || getCurrentMonthKey();
@@ -50,7 +68,7 @@ export function useMoneyRules() {
       );
     }
 
-    return items;
+    return sortAllBreakdownItems(items);
   });
 
   const [activeTab, setActiveTab] = useState("spending");
@@ -94,7 +112,7 @@ export function useMoneyRules() {
     setSalaryTransition(newSalary);
     setMonthlySalary(newSalary > 0 ? formatSalaryInput(newSalary) : "");
     setActuals(newActuals);
-    setBreakdownItems(newItems);
+    setBreakdownItems(sortAllBreakdownItems(newItems));
 
     const nextStore = {
       ...loadedStore,
@@ -128,11 +146,13 @@ export function useMoneyRules() {
       );
     }
 
+    const sortedCopiedItems = sortAllBreakdownItems(copiedItems);
+
     setSalary(copiedSalary);
     setSalaryTransition(copiedSalary);
     setMonthlySalary(copiedSalary > 0 ? formatSalaryInput(copiedSalary) : "");
     setActuals(copiedActuals);
-    setBreakdownItems(copiedItems);
+    setBreakdownItems(sortedCopiedItems);
 
     const activeM = loadedStore.activeMonth || getCurrentMonthKey();
     const updatedMonths = {
@@ -140,7 +160,7 @@ export function useMoneyRules() {
       [activeM]: {
         salary: copiedSalary,
         actuals: cleanActuals(copiedActuals),
-        items: cleanBreakdownItems(copiedItems),
+        items: cleanBreakdownItems(sortedCopiedItems),
         updatedAt: Date.now(),
       },
     };
@@ -383,6 +403,25 @@ export function useMoneyRules() {
     });
   }, [syncEmergencyToFire]);
 
+  const sortBreakdownItems = useCallback((ruleId) => {
+    setBreakdownItems((prev) => {
+      const currentList = prev[ruleId] || [];
+      if (currentList.length <= 1) return prev;
+
+      // Sort items descending by amount (empty/0 amounts at the bottom)
+      const sorted = [...currentList].sort((a, b) => {
+        const valA = (a.amount !== "" && a.amount !== undefined) ? Number(a.amount) : -1;
+        const valB = (b.amount !== "" && b.amount !== undefined) ? Number(b.amount) : -1;
+        return valB - valA;
+      });
+
+      return {
+        ...prev,
+        [ruleId]: sorted,
+      };
+    });
+  }, []);
+
   const reloadFromStore = useCallback(() => {
     const loaded = loadAllData();
     setStore(loaded);
@@ -392,7 +431,7 @@ export function useMoneyRules() {
     setSalaryTransition(data.salary || 0);
     setMonthlySalary(data.salary > 0 ? formatSalaryInput(data.salary) : "");
     setActuals(data.actuals || {});
-    setBreakdownItems(data.items || {});
+    setBreakdownItems(sortAllBreakdownItems(data.items || {}));
   }, []);
 
   const handleClearAll = useCallback(() => {
@@ -535,6 +574,7 @@ export function useMoneyRules() {
     updateBreakdownItem,
     addBreakdownItem,
     removeBreakdownItem,
+    sortBreakdownItems,
     handleClearAll,
     rulesWithAmounts,
     ruleMap,
