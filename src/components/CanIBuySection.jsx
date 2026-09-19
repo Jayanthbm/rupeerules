@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatMoney } from "../utils/formatters";
 import {
   evaluatePurchase,
@@ -11,10 +11,24 @@ import {
 } from "../utils/canIBuy";
 
 const QUICK_PRICES = [10000, 25000, 50000, 100000, 250000, 500000];
+const ADVISOR_STATE_KEY = "mrc_canibuy_state_v1";
+
+/** Advisor inputs survive view switches: they live in localStorage, not just component state. */
+function loadAdvisorState() {
+  try {
+    const raw = localStorage.getItem(ADVISOR_STATE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
 
 export default function CanIBuySection({ salary, salaryTransition, actuals, emergencyFundTarget }) {
-  const [priceStr, setPriceStr] = useState("");
-  const [payMode, setPayMode] = useState("full"); // 'full' | 'emi'
+  const [saved] = useState(loadAdvisorState);
+  const [priceStr, setPriceStr] = useState(() => (typeof saved?.priceStr === "string" ? saved.priceStr : ""));
+  const [payMode, setPayMode] = useState(() => (saved?.payMode === "emi" ? "emi" : "full"));
 
   const currentSalary = Number(salary) || 0;
   const salaryForDisplay = Number(salaryTransition) || currentSalary;
@@ -28,8 +42,19 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
   }, [priceStr]);
 
   // derived tenure: auto-picks a sensible default per price unless the user overrides it
-  const [userTenure, setUserTenure] = useState(null);
+  const [userTenure, setUserTenure] = useState(() =>
+    Number.isFinite(Number(saved?.userTenure)) && saved?.userTenure !== null ? Number(saved.userTenure) : null
+  );
   const months = userTenure ?? defaultEmiMonths(price);
+
+  // keep the advisor state in sync so it survives switching back and forth between views
+  useEffect(() => {
+    try {
+      localStorage.setItem(ADVISOR_STATE_KEY, JSON.stringify({ priceStr, payMode, userTenure }));
+    } catch {
+      // storage unavailable — advisor simply won't persist
+    }
+  }, [priceStr, payMode, userTenure]);
 
   const decision = useMemo(
     () =>
