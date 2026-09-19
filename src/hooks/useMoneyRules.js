@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useReducer, useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { ALL_RULES } from "../rules";
 import { formatSalaryInput, stripFormatting, formatMoney } from "../utils/formatters";
 import { computeReportsData } from "../utils/reports";
@@ -10,6 +10,10 @@ import {
   cleanActuals,
   cleanBreakdownItems,
 } from "../utils/storage";
+
+/* ---------------------------------------------------------------
+   Pure helpers
+   --------------------------------------------------------------- */
 
 function sortItemList(list) {
   if (!Array.isArray(list) || list.length <= 1) return list;
@@ -29,144 +33,292 @@ function sortAllBreakdownItems(itemsMap) {
   return sorted;
 }
 
-export function useMoneyRules() {
-  const [store, setStore] = useState(() => loadAllData());
+function defaultItemsMap() {
+  const items = {};
+  for (const rule of ALL_RULES) {
+    if (rule.defaultItems) {
+      items[rule.id] = rule.defaultItems;
+    }
+  }
+  return items;
+}
+
+/** Sum of entered amounts in a breakdown list. */
+function sumList(list) {
+  let sum = 0;
+  let hasAny = false;
+  for (const it of list || []) {
+    if (it && it.amount !== "" && it.amount !== undefined && it.amount !== null) {
+      sum += Number(it.amount) || 0;
+      hasAny = true;
+    }
+  }
+  return { sum, hasAny };
+}
+
+/** Keep Rule 8's linked Emergency Fund row in sync with Rule 7's value. Pure. */
+function syncEmergencyRow(items, efValue) {
+  const fireList = items[8] || [];
+  const hasEmergency = fireList.some((it) => it.id === "w3_emergency");
+  const emergencyRow = {
+    id: "w3_emergency",
+    name: "Emergency Fund (Liquid Reserves)",
+    amount: efValue > 0 ? efValue : "",
+    isLinked: true,
+  };
+  return {
+    ...items,
+    8: hasEmergency ? fireList.map((it) => (it.id === "w3_emergency" ? emergencyRow : it)) : [emergencyRow, ...fireList],
+  };
+}
+
+/* ---------------------------------------------------------------
+   State shape
+   --------------------------------------------------------------- */
+
+function buildInitialState() {
+  const store = loadAllData();
   const activeMonth = store.activeMonth || getCurrentMonthKey();
-  const currentMonthData = store.months?.[activeMonth] || {};
+  const current = store.months?.[activeMonth] || {};
+  const salary = current.salary || 0;
+  let items = current.items && Object.keys(current.items).length > 0 ? current.items : defaultItemsMap();
+  items = syncEmergencyRow(items, Number(current.actuals?.[7]) || 0);
 
-  const [monthlySalary, setMonthlySalary] = useState(() => {
-    return currentMonthData.salary > 0 ? formatSalaryInput(currentMonthData.salary) : "";
-  });
+  return {
+    store,
+    salary,
+    actuals: current.actuals || {},
+    breakdownItems: sortAllBreakdownItems(items),
+  };
+}
 
-  const [salary, setSalary] = useState(() => currentMonthData.salary || 0);
-  const [salaryTransition, setSalaryTransition] = useState(() => currentMonthData.salary || 0);
-  const [actuals, setActuals] = useState(() => currentMonthData.actuals || {});
+/* ---------------------------------------------------------------
+   Actions & reducer (all updaters pure)
+   --------------------------------------------------------------- */
 
-  const [breakdownItems, setBreakdownItems] = useState(() => {
-    let items = currentMonthData.items;
-    if (!items || Object.keys(items).length === 0) {
-      items = {};
-      for (const rule of ALL_RULES) {
-        if (rule.defaultItems) {
-          items[rule.id] = rule.defaultItems;
-        }
+const ACTIONS = {
+  SWITCH_MONTH: "SWITCH_MONTH",
+  COPY_MONTH: "COPY_MONTH",
+  SET_SALARY_COMMIT: "SET_SALARY_COMMIT",
+  SET_SALARY_CLEAR: "SET_SALARY_CLEAR",
+  UPDATE_ACTUAL: "UPDATE_ACTUAL",
+  UPDATE_ITEM: "UPDATE_ITEM",
+  ADD_ITEM: "ADD_ITEM",
+  REMOVE_ITEM: "REMOVE_ITEM",
+  SORT_ITEMS: "SORT_ITEMS",
+  RELOAD: "RELOAD",
+  CLEAR_ALL: "CLEAR_ALL",
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case ACTIONS.SWITCH_MONTH: {
+      const monthData = action.store.months?.[action.month] || {};
+      let items = monthData.items && Object.keys(monthData.items).length > 0 ? monthData.items : defaultItemsMap();
+      items = syncEmergencyRow(items, Number(monthData.actuals?.[7]) || 0);
+      const salary = monthData.salary || 0;
+      return {
+        ...state,
+        store: { ...action.store, activeMonth: action.month },
+        salary,
+        actuals: monthData.actuals || {},
+        breakdownItems: sortAllBreakdownItems(items),
+      };
+    }
+
+    case ACTIONS.COPY_MONTH: {
+      const source = action.store.months?.[action.sourceMonth];
+      if (!source) return state;
+      const copiedActuals = { ...(source.actuals || {}) };
+      let items = JSON.parse(JSON.stringify(source.items || {}));
+      items = syncEmergencyRow(items, Number(copiedActuals[7]) || 0);
+      items = sortAllBreakdownItems(items);
+      const activeM = action.store.activeMonth || getCurrentMonthKey();
+      const updatedMonths = {
+        ...(action.store.months || {}),
+        [activeM]: {
+          salary: source.salary || 0,
+          actuals: cleanActuals(copiedActuals),
+          items: cleanBreakdownItems(items),
+          updatedAt: Date.now(),
+        },
+      };
+      const nextStore = { ...action.store, months: updatedMonths };
+      return {
+        ...state,
+        store: nextStore,
+        salary: source.salary || 0,
+        actuals: copiedActuals,
+        breakdownItems: items,
+      };
+    }
+
+    case ACTIONS.SET_SALARY_COMMIT: {
+      const cleaned = stripFormatting(action.value);
+      const value = Number(cleaned);
+      if (!Number.isNaN(value) && value > 0) {
+        const changed = value !== state.salary;
+        return {
+          ...state,
+          salary: value,
+          actuals: changed ? {} : state.actuals,
+        };
       }
+      if (action.value.trim() !== "") {
+        return { ...state, salary: 0, actuals: {} };
+      }
+      return state;
     }
 
-    // Ensure Rule 8 has synced Emergency Fund item with current Rule 7 actuals
-    const efVal = Number(currentMonthData.actuals?.[7]) || 0;
-    const fireList = items[8] || [];
-    const hasEmergency = fireList.some((it) => it.id === "w3_emergency");
-    if (!hasEmergency) {
-      items[8] = [
-        { id: "w3_emergency", name: "Emergency Fund (Liquid Reserves)", amount: efVal > 0 ? efVal : "", isLinked: true },
-        ...fireList,
-      ];
-    } else {
-      items[8] = fireList.map((it) =>
-        it.id === "w3_emergency" ? { ...it, amount: efVal > 0 ? efVal : "", isLinked: true } : it
+    case ACTIONS.UPDATE_ACTUAL: {
+      const value = action.cleaned === "" ? "" : Number(action.cleaned);
+      const nextActuals = { ...state.actuals, [action.ruleId]: value };
+      let nextBreakdowns = state.breakdownItems;
+      if (action.ruleId === 7) {
+        const { updatedFireItems, fireActual } = syncEmergencyToFire(value || 0, state.breakdownItems);
+        nextBreakdowns = { ...state.breakdownItems, 8: updatedFireItems };
+        nextActuals[8] = fireActual;
+      }
+      return { ...state, actuals: nextActuals, breakdownItems: nextBreakdowns };
+    }
+
+    case ACTIONS.UPDATE_ITEM: {
+      const currentList = state.breakdownItems[action.ruleId] || [];
+      const updatedList = currentList.map((item) =>
+        item.id === action.itemId
+          ? { ...item, [action.field]: action.field === "amount" ? stripFormatting(action.rawValue) : action.rawValue }
+          : item
       );
+      const { sum, hasAny } = sumList(updatedList);
+      const nextBreakdowns = { ...state.breakdownItems, [action.ruleId]: updatedList };
+      const nextActuals = {
+        ...state.actuals,
+        [action.ruleId]: hasAny ? sum : "",
+      };
+      if (action.ruleId === 7) {
+        const { updatedFireItems, fireActual } = syncEmergencyToFire(hasAny ? sum : 0, nextBreakdowns);
+        nextBreakdowns[8] = updatedFireItems;
+        nextActuals[8] = fireActual;
+      }
+      return { ...state, actuals: nextActuals, breakdownItems: nextBreakdowns };
     }
 
-    return sortAllBreakdownItems(items);
-  });
+    case ACTIONS.ADD_ITEM: {
+      const currentList = state.breakdownItems[action.ruleId] || [];
+      const newItem = {
+        id: `custom_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`,
+        name: "",
+        amount: "",
+      };
+      return {
+        ...state,
+        breakdownItems: { ...state.breakdownItems, [action.ruleId]: [...currentList, newItem] },
+      };
+    }
 
+    case ACTIONS.REMOVE_ITEM: {
+      const currentList = state.breakdownItems[action.ruleId] || [];
+      const updatedList = currentList.filter((item) => item.id !== action.itemId);
+      const { sum, hasAny } = sumList(updatedList);
+      const nextBreakdowns = { ...state.breakdownItems, [action.ruleId]: updatedList };
+      const nextActuals = {
+        ...state.actuals,
+        [action.ruleId]: hasAny ? sum : (updatedList.length === 0 ? "" : state.actuals[action.ruleId]),
+      };
+      if (action.ruleId === 7) {
+        const { updatedFireItems, fireActual } = syncEmergencyToFire(hasAny ? sum : 0, nextBreakdowns);
+        nextBreakdowns[8] = updatedFireItems;
+        nextActuals[8] = fireActual;
+      }
+      return { ...state, actuals: nextActuals, breakdownItems: nextBreakdowns };
+    }
+
+    case ACTIONS.SORT_ITEMS: {
+      const currentList = state.breakdownItems[action.ruleId] || [];
+      if (currentList.length <= 1) return state;
+      return {
+        ...state,
+        breakdownItems: { ...state.breakdownItems, [action.ruleId]: sortItemList(currentList) },
+      };
+    }
+
+    case ACTIONS.RELOAD: {
+      const loaded = action.store;
+      const activeM = loaded.activeMonth || getCurrentMonthKey();
+      const data = loaded.months?.[activeM] || {};
+      let items = data.items && Object.keys(data.items).length > 0 ? data.items : defaultItemsMap();
+      items = syncEmergencyRow(items, Number(data.actuals?.[7]) || 0);
+      const salary = data.salary || 0;
+      return {
+        ...state,
+        store: loaded,
+        salary,
+        actuals: data.actuals || {},
+        breakdownItems: sortAllBreakdownItems(items),
+      };
+    }
+
+    case ACTIONS.CLEAR_ALL:
+      return {
+        store: { activeMonth: getCurrentMonthKey(), months: {} },
+        salary: 0,
+        actuals: {},
+        breakdownItems: sortAllBreakdownItems(defaultItemsMap()),
+      };
+
+    default:
+      return state;
+  }
+}
+
+/** Kept for continuity: sync EF value into FIRE list + compute fire actual. Pure. */
+function syncEmergencyToFire(efAmount, breakdowns) {
+  const fireItems = breakdowns[8] || [];
+  const hasEmergencyRow = fireItems.some((it) => it.id === "w3_emergency");
+  const emergencyRow = {
+    id: "w3_emergency",
+    name: "Emergency Fund (Liquid Reserves)",
+    amount: efAmount > 0 ? efAmount : "",
+    isLinked: true,
+  };
+  const updatedFireItems = hasEmergencyRow
+    ? fireItems.map((it) => (it.id === "w3_emergency" ? emergencyRow : it))
+    : [emergencyRow, ...fireItems];
+
+  const { sum, hasAny } = sumList(updatedFireItems);
+  return { updatedFireItems, fireActual: hasAny ? sum : "" };
+}
+
+/* ---------------------------------------------------------------
+   Hook
+   --------------------------------------------------------------- */
+
+export function useMoneyRules() {
+  const [state, dispatch] = useReducer(reducer, undefined, buildInitialState);
+  const { store, salary, actuals, breakdownItems } = state;
+  const activeMonth = store.activeMonth || getCurrentMonthKey();
+
+  const [salaryTransition, setSalaryTransition] = useState(salary);
+  // Salary typing buffer: null means "no typing in progress" → derive display from committed salary.
+  // This keeps the input in sync with external salary changes (month switch, reload, clear) without
+  // effects or refs — the displayed value simply falls back to the committed amount when not editing.
+  const [salaryTextBuffer, setSalaryTextBuffer] = useState(null);
   const [activeTab, setActiveTab] = useState("spending");
+  const monthlySalary = salaryTextBuffer !== null ? salaryTextBuffer : (salary > 0 ? formatSalaryInput(salary) : "");
 
-  // Keep ref to latest state values to avoid stale closures in event sync
+  // Keep ref to skip persistence on the very first render
   const isInitialMount = useRef(true);
 
-  // Sync state when activeMonth changes
   const switchMonth = useCallback((targetMonth) => {
     const loadedStore = loadAllData();
-    const monthData = loadedStore.months?.[targetMonth] || {};
-    const newSalary = monthData.salary || 0;
-    const newActuals = monthData.actuals || {};
-
-    let newItems = monthData.items;
-    if (!newItems || Object.keys(newItems).length === 0) {
-      newItems = {};
-      for (const rule of ALL_RULES) {
-        if (rule.defaultItems) {
-          newItems[rule.id] = rule.defaultItems;
-        }
-      }
-    }
-
-    // Ensure Emergency Fund row exists and is up to date in Rule 8
-    const efVal = Number(newActuals[7]) || 0;
-    const fireList = newItems[8] || [];
-    const hasEmergency = fireList.some((it) => it.id === "w3_emergency");
-    if (!hasEmergency) {
-      newItems[8] = [
-        { id: "w3_emergency", name: "Emergency Fund (Liquid Reserves)", amount: efVal > 0 ? efVal : "", isLinked: true },
-        ...fireList,
-      ];
-    } else {
-      newItems[8] = fireList.map((it) =>
-        it.id === "w3_emergency" ? { ...it, amount: efVal > 0 ? efVal : "", isLinked: true } : it
-      );
-    }
-
-    setSalary(newSalary);
-    setSalaryTransition(newSalary);
-    setMonthlySalary(newSalary > 0 ? formatSalaryInput(newSalary) : "");
-    setActuals(newActuals);
-    setBreakdownItems(sortAllBreakdownItems(newItems));
-
-    const nextStore = {
-      ...loadedStore,
-      activeMonth: targetMonth,
-    };
-    saveAllData(nextStore);
-    setStore(nextStore);
+    dispatch({ type: ACTIONS.SWITCH_MONTH, store: loadedStore, month: targetMonth });
+    saveAllData({ ...loadedStore, activeMonth: targetMonth });
   }, []);
 
-  // Copy data from a given source month into activeMonth
   const copyFromMonth = useCallback((sourceMonthKey) => {
     const loadedStore = loadAllData();
-    const sourceData = loadedStore.months?.[sourceMonthKey];
-    if (!sourceData) return false;
-
-    const copiedSalary = sourceData.salary || 0;
-    const copiedActuals = { ...(sourceData.actuals || {}) };
-    const copiedItems = JSON.parse(JSON.stringify(sourceData.items || {}));
-
-    const efVal = Number(copiedActuals[7]) || 0;
-    const fireList = copiedItems[8] || [];
-    const hasEmergency = fireList.some((it) => it.id === "w3_emergency");
-    if (!hasEmergency) {
-      copiedItems[8] = [
-        { id: "w3_emergency", name: "Emergency Fund (Liquid Reserves)", amount: efVal > 0 ? efVal : "", isLinked: true },
-        ...fireList,
-      ];
-    } else {
-      copiedItems[8] = fireList.map((it) =>
-        it.id === "w3_emergency" ? { ...it, amount: efVal > 0 ? efVal : "", isLinked: true } : it
-      );
-    }
-
-    const sortedCopiedItems = sortAllBreakdownItems(copiedItems);
-
-    setSalary(copiedSalary);
-    setSalaryTransition(copiedSalary);
-    setMonthlySalary(copiedSalary > 0 ? formatSalaryInput(copiedSalary) : "");
-    setActuals(copiedActuals);
-    setBreakdownItems(sortedCopiedItems);
-
-    const activeM = loadedStore.activeMonth || getCurrentMonthKey();
-    const updatedMonths = {
-      ...(loadedStore.months || {}),
-      [activeM]: {
-        salary: copiedSalary,
-        actuals: cleanActuals(copiedActuals),
-        items: cleanBreakdownItems(sortedCopiedItems),
-        updatedAt: Date.now(),
-      },
-    };
-    const nextStore = { ...loadedStore, months: updatedMonths };
-    saveAllData(nextStore);
-    setStore(nextStore);
+    if (!loadedStore.months?.[sourceMonthKey]) return false;
+    dispatch({ type: ACTIONS.COPY_MONTH, store: loadedStore, sourceMonth: sourceMonthKey });
     return true;
   }, []);
 
@@ -220,234 +372,46 @@ export function useMoneyRules() {
           updatedAt: Date.now(),
         },
       };
-      const nextStore = { ...loaded, months: updatedMonths };
-      saveAllData(nextStore);
+      saveAllData({ ...loaded, months: updatedMonths });
     }
   }, [salary, actuals, breakdownItems]);
 
   const handleSalaryChange = useCallback((value) => {
-    setMonthlySalary(value);
+    setSalaryTextBuffer(value);
   }, []);
 
   const handleSalaryCommit = useCallback(() => {
-    const cleaned = stripFormatting(monthlySalary);
-    const value = Number(cleaned);
-
-    if (!Number.isNaN(value) && value > 0) {
-      if (value !== salary) {
-        setSalary(value);
-        setActuals({});
-      }
-      setMonthlySalary(formatSalaryInput(value));
-    } else if (monthlySalary.trim() !== "") {
-      setMonthlySalary("");
-      setSalary(0);
-      setActuals({});
-    }
-  }, [monthlySalary, salary]);
-
-  // Helper to sync rule 7 (Emergency Fund) into rule 8 (FIRE) breakdown item
-  const syncEmergencyToFire = useCallback((efAmount, currentBreakdowns) => {
-    const fireItems = currentBreakdowns[8] || [];
-    let updatedFireItems;
-    const hasEmergencyRow = fireItems.some((it) => it.id === "w3_emergency");
-
-    if (hasEmergencyRow) {
-      updatedFireItems = fireItems.map((it) => {
-        if (it.id === "w3_emergency") {
-          return { ...it, amount: efAmount > 0 ? efAmount : "" };
-        }
-        return it;
-      });
-    } else {
-      const defaultEmergencyRow = {
-        id: "w3_emergency",
-        name: "Emergency Fund (Liquid Reserves)",
-        amount: efAmount > 0 ? efAmount : "",
-        isLinked: true,
-      };
-      updatedFireItems = [defaultEmergencyRow, ...fireItems];
-    }
-
-    let fireSum = 0;
-    let hasAnyVal = false;
-    for (const it of updatedFireItems) {
-      if (it.amount !== "" && it.amount !== undefined) {
-        fireSum += Number(it.amount) || 0;
-        hasAnyVal = true;
-      }
-    }
-
-    return {
-      updatedFireItems,
-      fireActual: hasAnyVal ? fireSum : "",
-    };
-  }, []);
+    dispatch({ type: ACTIONS.SET_SALARY_COMMIT, value: salaryTextBuffer ?? "" });
+    setSalaryTextBuffer(null);
+  }, [salaryTextBuffer]);
 
   const updateActual = useCallback((ruleId, rawValue) => {
-    const cleaned = stripFormatting(rawValue);
-    const value = cleaned === "" ? "" : Number(cleaned);
-
-    setActuals((prev) => {
-      const next = { ...prev, [ruleId]: value };
-
-      // If updating emergency fund actual directly, sync to FIRE
-      if (ruleId === 7) {
-        setBreakdownItems((bPrev) => {
-          const { updatedFireItems, fireActual } = syncEmergencyToFire(value || 0, bPrev);
-          next[8] = fireActual;
-          return { ...bPrev, 8: updatedFireItems };
-        });
-      }
-
-      return next;
-    });
-  }, [syncEmergencyToFire]);
+    dispatch({ type: ACTIONS.UPDATE_ACTUAL, ruleId, cleaned: stripFormatting(rawValue) });
+  }, []);
 
   const updateBreakdownItem = useCallback((ruleId, itemId, field, rawValue) => {
-    setBreakdownItems((prev) => {
-      const currentList = prev[ruleId] || [];
-      const updatedList = currentList.map((item) => {
-        if (item.id === itemId) {
-          return { ...item, [field]: field === "amount" ? stripFormatting(rawValue) : rawValue };
-        }
-        return item;
-      });
-
-      let sum = 0;
-      let hasAnyValue = false;
-      for (const it of updatedList) {
-        if (it.amount !== "" && it.amount !== undefined) {
-          sum += Number(it.amount) || 0;
-          hasAnyValue = true;
-        }
-      }
-
-      const nextBreakdowns = {
-        ...prev,
-        [ruleId]: updatedList,
-      };
-
-      setActuals((actPrev) => {
-        const nextActuals = {
-          ...actPrev,
-          [ruleId]: hasAnyValue ? sum : "",
-        };
-
-        // When Emergency Fund items (rule 7) update, automatically propagate sum to FIRE (rule 8)
-        if (ruleId === 7) {
-          const efTotal = hasAnyValue ? sum : 0;
-          const { updatedFireItems, fireActual } = syncEmergencyToFire(efTotal, nextBreakdowns);
-          nextBreakdowns[8] = updatedFireItems;
-          nextActuals[8] = fireActual;
-        }
-
-        return nextActuals;
-      });
-
-      return nextBreakdowns;
-    });
-  }, [syncEmergencyToFire]);
+    dispatch({ type: ACTIONS.UPDATE_ITEM, ruleId, itemId, field, rawValue });
+  }, []);
 
   const addBreakdownItem = useCallback((ruleId) => {
-    setBreakdownItems((prev) => {
-      const currentList = prev[ruleId] || [];
-      const newItem = {
-        id: `custom_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`,
-        name: "",
-        amount: "",
-      };
-      return {
-        ...prev,
-        [ruleId]: [...currentList, newItem],
-      };
-    });
+    dispatch({ type: ACTIONS.ADD_ITEM, ruleId });
   }, []);
 
   const removeBreakdownItem = useCallback((ruleId, itemId) => {
-    setBreakdownItems((prev) => {
-      const currentList = prev[ruleId] || [];
-      const updatedList = currentList.filter((item) => item.id !== itemId);
-
-      let sum = 0;
-      let hasAnyValue = false;
-      for (const it of updatedList) {
-        if (it.amount !== "" && it.amount !== undefined) {
-          sum += Number(it.amount) || 0;
-          hasAnyValue = true;
-        }
-      }
-
-      const nextBreakdowns = {
-        ...prev,
-        [ruleId]: updatedList,
-      };
-
-      setActuals((actPrev) => {
-        const nextActuals = {
-          ...actPrev,
-          [ruleId]: hasAnyValue ? sum : (updatedList.length === 0 ? "" : actPrev[ruleId]),
-        };
-
-        if (ruleId === 7) {
-          const efTotal = hasAnyValue ? sum : 0;
-          const { updatedFireItems, fireActual } = syncEmergencyToFire(efTotal, nextBreakdowns);
-          nextBreakdowns[8] = updatedFireItems;
-          nextActuals[8] = fireActual;
-        }
-
-        return nextActuals;
-      });
-
-      return nextBreakdowns;
-    });
-  }, [syncEmergencyToFire]);
+    dispatch({ type: ACTIONS.REMOVE_ITEM, ruleId, itemId });
+  }, []);
 
   const sortBreakdownItems = useCallback((ruleId) => {
-    setBreakdownItems((prev) => {
-      const currentList = prev[ruleId] || [];
-      if (currentList.length <= 1) return prev;
-
-      // Sort items descending by amount (empty/0 amounts at the bottom)
-      const sorted = [...currentList].sort((a, b) => {
-        const valA = (a.amount !== "" && a.amount !== undefined) ? Number(a.amount) : -1;
-        const valB = (b.amount !== "" && b.amount !== undefined) ? Number(b.amount) : -1;
-        return valB - valA;
-      });
-
-      return {
-        ...prev,
-        [ruleId]: sorted,
-      };
-    });
+    dispatch({ type: ACTIONS.SORT_ITEMS, ruleId });
   }, []);
 
   const reloadFromStore = useCallback(() => {
-    const loaded = loadAllData();
-    setStore(loaded);
-    const activeM = loaded.activeMonth || getCurrentMonthKey();
-    const data = loaded.months?.[activeM] || {};
-    setSalary(data.salary || 0);
-    setSalaryTransition(data.salary || 0);
-    setMonthlySalary(data.salary > 0 ? formatSalaryInput(data.salary) : "");
-    setActuals(data.actuals || {});
-    setBreakdownItems(sortAllBreakdownItems(data.items || {}));
+    dispatch({ type: ACTIONS.RELOAD, store: loadAllData() });
   }, []);
 
   const handleClearAll = useCallback(() => {
-    setActuals({});
-    setMonthlySalary("");
-    setSalary(0);
-    setSalaryTransition(0);
-    const initial = {};
-    for (const rule of ALL_RULES) {
-      if (rule.defaultItems) {
-        initial[rule.id] = rule.defaultItems;
-      }
-    }
-    setBreakdownItems(initial);
     clearSavedState();
-    setStore({ activeMonth: getCurrentMonthKey(), months: {} });
+    dispatch({ type: ACTIONS.CLEAR_ALL });
   }, []);
 
   // Aggregate store reports to derive multi-month averages for adaptive benchmarks
