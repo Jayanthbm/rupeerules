@@ -334,6 +334,15 @@
   border-color: var(--mrc-border-focus);
 }
 
+.mrc-canibuy-rate-hint {
+  font-size: 12px;
+  color: var(--mrc-text-muted);
+}
+
+.mrc-canibuy-zero-interest {
+  color: #059669;
+}
+
 .mrc-canibuy-emi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));

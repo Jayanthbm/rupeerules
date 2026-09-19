@@ -29,6 +29,10 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
   const [saved] = useState(loadAdvisorState);
   const [priceStr, setPriceStr] = useState(() => (typeof saved?.priceStr === "string" ? saved.priceStr : ""));
   const [payMode, setPayMode] = useState(() => (saved?.payMode === "emi" ? "emi" : "full"));
+  const [rateInput, setRateInput] = useState(() => {
+    const r = Number(saved?.annualRate);
+    return Number.isFinite(r) && r >= 0 && r <= 36 ? String(r) : String(EMI_ANNUAL_RATE * 100);
+  });
 
   const currentSalary = Number(salary) || 0;
   const salaryForDisplay = Number(salaryTransition) || currentSalary;
@@ -47,14 +51,23 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
   );
   const months = userTenure ?? defaultEmiMonths(price);
 
+  // annual rate as a fraction (0 = no-cost EMI)
+  const annualRate = useMemo(() => {
+    const cleaned = rateInput.replace(/[^0-9.]/g, "");
+    const pct = cleaned === "" ? NaN : Number(cleaned);
+    if (!Number.isFinite(pct) || pct < 0) return EMI_ANNUAL_RATE;
+    return Math.min(pct, 36) / 100;
+  }, [rateInput]);
+  const isNoCostEmi = annualRate === 0;
+
   // keep the advisor state in sync so it survives switching back and forth between views
   useEffect(() => {
     try {
-      localStorage.setItem(ADVISOR_STATE_KEY, JSON.stringify({ priceStr, payMode, userTenure }));
+      localStorage.setItem(ADVISOR_STATE_KEY, JSON.stringify({ priceStr, payMode, userTenure, annualRate: annualRate * 100 }));
     } catch {
       // storage unavailable — advisor simply won't persist
     }
-  }, [priceStr, payMode, userTenure]);
+  }, [priceStr, payMode, userTenure, annualRate]);
 
   const decision = useMemo(
     () =>
@@ -78,12 +91,12 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
         monthlyFreeCash: decision.monthlyFreeCash || 0,
         existingEmi: maxEmiActual,
         months,
-        rate: EMI_ANNUAL_RATE,
+        rate: annualRate,
       }),
-    [price, decision.verdict, decision.monthlyFreeCash, currentSalary, maxEmiActual, months]
+    [price, decision.verdict, decision.monthlyFreeCash, currentSalary, maxEmiActual, months, annualRate]
   );
 
-  const { emi, total, interest } = computeEmiCost(price, EMI_ANNUAL_RATE, months);
+  const { emi, total, interest } = computeEmiCost(price, annualRate, months);
   const monthsToSave = monthsToAfford(price, decision.monthlyFreeCash || 0);
   const waitUntil = useMemo(() => {
     if (!monthsToSave) return null;
@@ -274,6 +287,23 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
                     placeholder={`${defaultEmiMonths(price)} (auto)`}
                   />
                 </div>
+
+                <div className="mrc-canibuy-custom-months">
+                  <label htmlFor="mrc-emi-rate">Interest rate (% p.a.)</label>
+                  <input
+                    id="mrc-emi-rate"
+                    className="mrc-canibuy-rate-input"
+                    type="text"
+                    inputMode="decimal"
+                    value={rateInput}
+                    onChange={(e) => setRateInput(e.target.value)}
+                    placeholder="e.g. 12"
+                    style={{ width: 110 }}
+                  />
+                  <span className="mrc-canibuy-rate-hint">
+                    {isNoCostEmi ? "No-cost EMI — zero interest" : `${formatMoney(interest)} total interest at this rate`}
+                  </span>
+                </div>
               </div>
 
               <div className="mrc-canibuy-emi-grid">
@@ -287,7 +317,9 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
                 </div>
                 <div className="mrc-canibuy-emi-stat">
                   <span>Interest cost</span>
-                  <strong>{formatMoney(interest)}</strong>
+                  <strong className={isNoCostEmi ? "mrc-canibuy-zero-interest" : ""}>
+                    {isNoCostEmi ? "₹0 🎉" : formatMoney(interest)}
+                  </strong>
                 </div>
                 <div className="mrc-canibuy-emi-stat">
                   <span>Post-EMI surplus</span>
