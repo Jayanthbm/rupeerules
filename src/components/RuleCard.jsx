@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import NumberTicker from "./NumberTicker";
 import { CURRENCY, formatMoney, badgeLabel } from "../utils/formatters";
 import { getRuleFeedback } from "../utils/feedback";
+import { projectFireMonths, formatFireYears } from "../utils/fireProjection";
 
 export default function RuleCard({
   rule,
@@ -37,6 +38,29 @@ export default function RuleCard({
       onSortBreakdownItems(rule.id);
     }
   };
+
+  // Dynamic FIRE timeline: compound the current corpus and actual investing rate to the target.
+  const fireProjection = useMemo(() => {
+    if (rule.id !== 8 || item.recommended <= 0) return null;
+    const investActual = ruleMap?.[5]?.actual || 0;
+    const monthlyInvestment = investActual > 0 ? investActual : (ruleMap?.[5]?.recommended || 0);
+    if (monthlyInvestment <= 0) return null;
+    const months = projectFireMonths({
+      target: item.recommended,
+      corpus: item.actual,
+      monthlyInvestment,
+    });
+    return { months, monthlyInvestment, usingActual: investActual > 0 };
+  }, [rule.id, item.recommended, item.actual, ruleMap]);
+
+  const fireTimelineText = useMemo(() => {
+    if (!fireProjection) return null;
+    if (fireProjection.months === 0) return "Target reached — financial independence achieved! 🎉";
+    const label = formatFireYears(fireProjection.months);
+    if (!label) return "Add a monthly investment (Rule 5) to see when you'd reach this target.";
+    const source = fireProjection.usingActual ? "your actual investing rate" : "the recommended 15%";
+    return `At ${formatMoney(fireProjection.monthlyInvestment)}/mo (${source}) and ~12% CAGR, you'd reach this target in ${label}.`;
+  }, [fireProjection]);
 
   return (
     <li className="mrc-rule" style={{ "--rule-color": rule.color, "--rule-bg": rule.bg }}>
@@ -318,11 +342,11 @@ export default function RuleCard({
           </div>
         )}
 
-        {rule.id === 8 && item.recommended > 0 && (
+        {rule.id === 8 && item.recommended > 0 && fireTimelineText && (
           <div className="mrc-fire-estimate">
             <div className="mrc-fire-badge">🔥 FIRE Projection</div>
             <div className="mrc-fire-text">
-              At standard 15% monthly investing (<strong>{formatMoney(ruleMap ? (ruleMap[5]?.actual || ruleMap[5]?.recommended || 0) : 0)}/mo</strong> at ~12% CAGR), target is reached in approximately <strong>17–19 years</strong> from scratch.
+              {fireTimelineText}
             </div>
           </div>
         )}
