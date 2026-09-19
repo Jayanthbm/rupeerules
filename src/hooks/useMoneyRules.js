@@ -353,7 +353,7 @@ export function useMoneyRules() {
     setBreakdownItems((prev) => {
       const currentList = prev[ruleId] || [];
       const newItem = {
-        id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        id: `custom_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`,
         name: "",
         amount: "",
       };
