@@ -27,6 +27,7 @@ function loadAdvisorState() {
 
 export default function CanIBuySection({ salary, salaryTransition, actuals, emergencyFundTarget }) {
   const [saved] = useState(loadAdvisorState);
+  const [productName, setProductName] = useState(() => (typeof saved?.productName === "string" ? saved.productName : ""));
   const [priceStr, setPriceStr] = useState(() => (typeof saved?.priceStr === "string" ? saved.priceStr : ""));
   const [payMode, setPayMode] = useState(() => (saved?.payMode === "emi" ? "emi" : "full"));
   const [rateInput, setRateInput] = useState(() => {
@@ -63,11 +64,14 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
   // keep the advisor state in sync so it survives switching back and forth between views
   useEffect(() => {
     try {
-      localStorage.setItem(ADVISOR_STATE_KEY, JSON.stringify({ priceStr, payMode, userTenure, annualRate: annualRate * 100 }));
+      localStorage.setItem(
+        ADVISOR_STATE_KEY,
+        JSON.stringify({ productName, priceStr, payMode, userTenure, annualRate: annualRate * 100 })
+      );
     } catch {
       // storage unavailable — advisor simply won't persist
     }
-  }, [priceStr, payMode, userTenure, annualRate]);
+  }, [productName, priceStr, payMode, userTenure, annualRate]);
 
   const decision = useMemo(
     () =>
@@ -124,13 +128,24 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
       <div className="mrc-canibuy-intro">
         <h1 className="mrc-canibuy-title">Can I buy this?</h1>
         <p className="mrc-canibuy-subtitle">
-          Set a price — we'll check it against your salary, spending, EMIs and emergency fund, then tell you
-          to <strong>buy now</strong>, <strong>buy later</strong>, or hold off, with a full-payment vs EMI comparison.
+          Name a product and set its price — we'll check it against your salary, spending, EMIs and emergency fund,
+          then tell you to <strong>buy now</strong>, <strong>buy later</strong>, or hold off, with a full-payment vs EMI comparison.
         </p>
       </div>
 
-      {/* Price slider + input */}
+      {/* Product + price */}
       <section className="mrc-canibuy-card">
+        <div className="mrc-canibuy-product-row">
+          <input
+            className="mrc-canibuy-product-input"
+            type="text"
+            value={productName}
+            onChange={(e) => setProductName(e.target.value)}
+            placeholder="What are you buying? e.g. iPhone 16, sofa, washing machine"
+            aria-label="Product name"
+            maxLength={60}
+          />
+        </div>
         <div className="mrc-canibuy-price-head">
           <span className="mrc-field-label">Product price</span>
           <div className="mrc-canibuy-price-input-wrap">
@@ -180,7 +195,10 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
           <div className="mrc-canibuy-verdict-head">
             <span className="mrc-canibuy-verdict-emoji">{decision.emoji}</span>
             <div>
-              <h2 className="mrc-canibuy-verdict-label">{decision.label}</h2>
+              <h2 className="mrc-canibuy-verdict-label">
+                {decision.label}
+                {productName.trim() && <span className="mrc-canibuy-verdict-product"> · {productName.trim()}</span>}
+              </h2>
               <p className="mrc-canibuy-verdict-summary">{decision.summary}</p>
             </div>
             <div className="mrc-canibuy-score-ring">

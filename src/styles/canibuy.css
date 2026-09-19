@@ -38,6 +38,39 @@
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
+/* --- product name --- */
+.mrc-canibuy-product-row {
+  display: flex;
+}
+
+.mrc-canibuy-product-input {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--mrc-text);
+  background: var(--mrc-input-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mrc-canibuy-product-input:focus {
+  border-color: var(--mrc-border-focus);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.mrc-canibuy-product-input::placeholder {
+  color: var(--mrc-text-subtle);
+}
+
+.mrc-canibuy-verdict-product {
+  font-weight: 500;
+  font-size: 0.8em;
+  color: var(--mrc-text-muted);
+}
+
 /* --- price slider --- */
 .mrc-canibuy-price-head {
   display: flex;
