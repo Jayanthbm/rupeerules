@@ -1,9 +1,12 @@
 import { useState, useRef } from "react";
 import { exportBackupJSON, importBackupJSON } from "../utils/storage";
 
+const SAMPLE_DATA_URL = "/sample-2years-data.json";
+
 export default function BackupModal({ isOpen, onClose, onDataImported }) {
   const [copied, setCopied] = useState(false);
   const [importStatus, setImportStatus] = useState(null);
+  const [loadingSample, setLoadingSample] = useState(false);
   const fileInputRef = useRef(null);
 
   if (!isOpen) return null;
@@ -28,6 +31,28 @@ export default function BackupModal({ isOpen, onClose, onDataImported }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
+  };
+
+  const handleLoadSample = async () => {
+    setLoadingSample(true);
+    setImportStatus(null);
+    try {
+      const res = await fetch(SAMPLE_DATA_URL);
+      if (!res.ok) throw new Error("Sample data file not found");
+      const content = await res.text();
+      const result = importBackupJSON(content);
+      if (result.success) {
+        setImportStatus({ success: true, message: `Loaded sample data: ${result.count} months of records.` });
+        if (onDataImported) onDataImported();
+        setTimeout(onClose, 1500);
+      } else {
+        setImportStatus({ success: false, message: result.error });
+      }
+    } catch (err) {
+      setImportStatus({ success: false, message: err.message || "Could not load sample data" });
+    } finally {
+      setLoadingSample(false);
+    }
   };
 
   const handleFileUpload = (e) => {
@@ -96,7 +121,7 @@ export default function BackupModal({ isOpen, onClose, onDataImported }) {
 
             <div className="mrc-backup-card">
               <h3>Restore / Import</h3>
-              <p>Select a previously exported RupeeRules JSON backup file to restore your financial logs.</p>
+              <p>Select a previously exported RupeeRules JSON backup file to restore your financial logs — or try the app with 2 years of realistic sample data (replaces current data).</p>
               <input
                 type="file"
                 ref={fileInputRef}
@@ -104,18 +129,28 @@ export default function BackupModal({ isOpen, onClose, onDataImported }) {
                 style={{ display: "none" }}
                 onChange={handleFileUpload}
               />
-              <button
-                type="button"
-                className="mrc-action-btn mrc-btn-secondary"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-                Select Backup File
-              </button>
+              <div className="mrc-backup-btn-row">
+                <button
+                  type="button"
+                  className="mrc-action-btn mrc-btn-secondary"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  Select Backup File
+                </button>
+                <button
+                  type="button"
+                  className="mrc-action-btn mrc-btn-secondary"
+                  onClick={handleLoadSample}
+                  disabled={loadingSample}
+                >
+                  {loadingSample ? "Loading…" : "🧪 Try sample data"}
+                </button>
+              </div>
             </div>
           </div>
 
