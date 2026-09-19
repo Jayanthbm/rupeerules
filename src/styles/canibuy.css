@@ -376,6 +376,60 @@
   color: #059669;
 }
 
+/* --- full vs EMI comparison --- */
+.mrc-canibuy-compare {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.mrc-canibuy-compare-col {
+  flex: 1;
+  background: var(--mrc-input-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: center;
+  text-align: center;
+}
+
+.mrc-canibuy-compare-col strong {
+  font-size: 16px;
+  color: var(--mrc-text);
+}
+
+.mrc-canibuy-compare-emi {
+  border-color: rgba(217, 119, 6, 0.5);
+  background: rgba(217, 119, 6, 0.06);
+}
+
+.mrc-canibuy-compare-tag {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--mrc-text-subtle);
+}
+
+.mrc-canibuy-compare-sub {
+  font-size: 12px;
+  color: var(--mrc-text-muted);
+}
+
+.mrc-canibuy-compare-vs {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mrc-text-subtle);
+}
+
+.mrc-canibuy-compare-note strong {
+  color: #d97706;
+}
+
 .mrc-canibuy-emi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));

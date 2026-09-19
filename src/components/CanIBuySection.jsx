@@ -353,6 +353,30 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
                 {planEval.feasible ? "✅ " : "⚠️ "}
                 {planEval.message}
               </div>
+
+              {price > 0 && !isNoCostEmi && (
+                <div className="mrc-canibuy-compare">
+                  <div className="mrc-canibuy-compare-col">
+                    <span className="mrc-canibuy-compare-tag">Full payment</span>
+                    <strong>{formatMoney(price)}</strong>
+                    <span className="mrc-canibuy-compare-sub">₹0 interest</span>
+                  </div>
+                  <div className="mrc-canibuy-compare-vs">vs</div>
+                  <div className={`mrc-canibuy-compare-col ${isNoCostEmi ? "" : "mrc-canibuy-compare-emi"}`}>
+                    <span className="mrc-canibuy-compare-tag">EMI ({months}m)</span>
+                    <strong>{formatMoney(total)}</strong>
+                    <span className="mrc-canibuy-compare-sub">{formatMoney(interest)} interest</span>
+                  </div>
+                </div>
+              )}
+              {price > 0 && !isNoCostEmi && (
+                <div className="mrc-canibuy-plan-subnote mrc-canibuy-compare-note">
+                  💡 Paying in full instead of EMI saves <strong>{formatMoney(interest)}</strong>
+                  {decision.monthlyFreeCash > 0 && interest > 0 && (
+                    <> — that's {monthsToAfford(interest, decision.monthlyFreeCash)} month{monthsToAfford(interest, decision.monthlyFreeCash) === 1 ? "" : "s"} of free cash flow.</>
+                  )}
+                </div>
+              )}
               {planEval.notes?.map((n, i) => (
                 <div key={i} className="mrc-canibuy-plan-subnote">
                   {n}
