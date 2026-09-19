@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDarkMode } from "./hooks/useDarkMode";
 import { useMoneyRules } from "./hooks/useMoneyRules";
 import Header from "./components/Header";
+import CanIBuySection from "./components/CanIBuySection";
 import MonthPicker from "./components/MonthPicker";
 import SalaryInput from "./components/SalaryInput";
 import EmptyState from "./components/EmptyState";
@@ -11,7 +12,7 @@ import BackupModal from "./components/BackupModal";
 
 export default function MoneyRulesCalculator() {
   const [darkMode, setDarkMode] = useDarkMode();
-  const [currentView, setCurrentView] = useState("calculator"); // 'calculator' | 'reports'
+  const [currentView, setCurrentView] = useState("calculator"); // 'calculator' | 'canibuy' | 'reports'
   const [showBackup, setShowBackup] = useState(false);
 
   const {
@@ -35,6 +36,8 @@ export default function MoneyRulesCalculator() {
     rulesWithAmounts,
     ruleMap,
     breakdownItems,
+    actuals,
+    salary,
   } = useMoneyRules();
 
   return (
@@ -44,6 +47,7 @@ export default function MoneyRulesCalculator() {
         currentView={currentView}
         onToggleDarkMode={() => setDarkMode((prev) => !prev)}
         onOpenReports={() => setCurrentView((prev) => (prev === "reports" ? "calculator" : "reports"))}
+        onOpenCanIBuy={() => setCurrentView((prev) => (prev === "canibuy" ? "calculator" : "canibuy"))}
         onOpenBackup={() => setShowBackup(true)}
       />
 
@@ -51,6 +55,14 @@ export default function MoneyRulesCalculator() {
         <ReportsPage
           store={store}
           onBackToCalculator={() => setCurrentView("calculator")}
+        />
+      ) : currentView === "canibuy" ? (
+        <CanIBuySection
+          salary={salary}
+          salaryTransition={salaryTransition}
+          actuals={actuals}
+          emergencyFundTarget={ruleMap?.[7]?.recommended || 0}
+          avgEmiSurplus={salaryTransition * 0.2}
         />
       ) : (
         <>

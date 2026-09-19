@@ -1,0 +1,323 @@
+import { useMemo, useState } from "react";
+import { formatMoney } from "../utils/formatters";
+import {
+  evaluatePurchase,
+  evaluatePaymentPlan,
+  monthsToAfford,
+  defaultEmiMonths,
+  computeEmiCost,
+  EMI_TENURE_OPTIONS,
+  EMI_ANNUAL_RATE,
+} from "../utils/canIBuy";
+
+const QUICK_PRICES = [10000, 25000, 50000, 100000, 250000, 500000];
+
+export default function CanIBuySection({ salary, salaryTransition, actuals, emergencyFundTarget }) {
+  const [priceStr, setPriceStr] = useState("");
+  const [payMode, setPayMode] = useState("full"); // 'full' | 'emi'
+
+  const currentSalary = Number(salary) || 0;
+  const salaryForDisplay = Number(salaryTransition) || currentSalary;
+  const essentialsActual = Number(actuals?.[1]) || 0;
+  const maxEmiActual = Number(actuals?.[6]) || 0;
+  const emergencyFundActual = Number(actuals?.[7]) || 0;
+
+  const price = useMemo(() => {
+    const cleaned = priceStr.replace(/[^0-9.]/g, "");
+    return cleaned === "" ? 0 : Number(cleaned) || 0;
+  }, [priceStr]);
+
+  // derived tenure: auto-picks a sensible default per price unless the user overrides it
+  const [userTenure, setUserTenure] = useState(null);
+  const months = userTenure ?? defaultEmiMonths(price);
+
+  const decision = useMemo(
+    () =>
+      evaluatePurchase({
+        price,
+        salary: currentSalary,
+        essentialsActual,
+        maxEmiActual,
+        emergencyFundActual,
+        emergencyFundTarget,
+      }),
+    [price, currentSalary, essentialsActual, maxEmiActual, emergencyFundActual, emergencyFundTarget]
+  );
+
+  const planEval = useMemo(
+    () =>
+      evaluatePaymentPlan({
+        price,
+        verdict: decision.verdict,
+        salary: currentSalary,
+        monthlyFreeCash: decision.monthlyFreeCash || 0,
+        existingEmi: maxEmiActual,
+        months,
+        rate: EMI_ANNUAL_RATE,
+      }),
+    [price, decision.verdict, decision.monthlyFreeCash, currentSalary, maxEmiActual, months]
+  );
+
+  const { emi, total, interest } = computeEmiCost(price, EMI_ANNUAL_RATE, months);
+  const monthsToSave = monthsToAfford(price, decision.monthlyFreeCash || 0);
+  const waitUntil = useMemo(() => {
+    if (!monthsToSave) return null;
+    const d = new Date();
+    d.setMonth(d.getMonth() + monthsToSave);
+    return d.toLocaleString("en-IN", { month: "short", year: "numeric" });
+  }, [monthsToSave]);
+
+  const hasDecision = decision.verdict === "buy-now" || decision.verdict === "buy-later" || decision.verdict === "do-not-buy";
+  const sliderValue = Math.min(price, 1000000);
+
+  const handleSliderChange = (e) => {
+    const v = Number(e.target.value);
+    setPriceStr(v > 0 ? v.toLocaleString("en-IN") : "");
+  };
+
+  const handlePriceInput = (e) => {
+    const raw = e.target.value;
+    const cleaned = raw.replace(/[^0-9.]/g, "");
+    setPriceStr(cleaned === "" ? "" : Number(cleaned).toLocaleString("en-IN"));
+  };
+
+  return (
+    <div className="mrc-canibuy">
+      <div className="mrc-canibuy-intro">
+        <h1 className="mrc-canibuy-title">Can I buy this?</h1>
+        <p className="mrc-canibuy-subtitle">
+          Set a price — we'll check it against your salary, spending, EMIs and emergency fund, then tell you
+          to <strong>buy now</strong>, <strong>buy later</strong>, or hold off, with a full-payment vs EMI comparison.
+        </p>
+      </div>
+
+      {/* Price slider + input */}
+      <section className="mrc-canibuy-card">
+        <div className="mrc-canibuy-price-head">
+          <span className="mrc-field-label">Product price</span>
+          <div className="mrc-canibuy-price-input-wrap">
+            <span className="mrc-actual-prefix">₹</span>
+            <input
+              className="mrc-canibuy-price-input"
+              type="text"
+              inputMode="decimal"
+              value={priceStr}
+              onChange={handlePriceInput}
+              placeholder="e.g. 60000"
+              aria-label="Product price"
+            />
+          </div>
+        </div>
+        <input
+          className="mrc-canibuy-slider"
+          type="range"
+          min="0"
+          max="1000000"
+          step="1000"
+          value={sliderValue}
+          onChange={handleSliderChange}
+          aria-label="Product price slider"
+        />
+        <div className="mrc-canibuy-slider-scale">
+          <span>₹0</span>
+          <span>₹10L</span>
+        </div>
+        <div className="mrc-canibuy-quick-row">
+          {QUICK_PRICES.map((p) => (
+            <button
+              key={p}
+              type="button"
+              className={`mrc-canibuy-quick-btn ${price === p ? "mrc-canibuy-quick-active" : ""}`}
+              onClick={() => setPriceStr(p.toLocaleString("en-IN"))}
+            >
+              {p >= 100000 ? `₹${p / 100000}L` : `₹${(p / 1000).toFixed(0)}k`}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Verdict */}
+      {hasDecision && (
+        <section className={`mrc-canibuy-verdict mrc-canibuy-verdict-${decision.verdict}`}>
+          <div className="mrc-canibuy-verdict-head">
+            <span className="mrc-canibuy-verdict-emoji">{decision.emoji}</span>
+            <div>
+              <h2 className="mrc-canibuy-verdict-label">{decision.label}</h2>
+              <p className="mrc-canibuy-verdict-summary">{decision.summary}</p>
+            </div>
+            <div className="mrc-canibuy-score-ring">
+              <svg viewBox="0 0 60 60" width="56" height="56">
+                <circle cx="30" cy="30" r="26" fill="none" stroke="var(--mrc-border)" strokeWidth="5" />
+                <circle
+                  cx="30"
+                  cy="30"
+                  r="26"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeDasharray={`${(decision.score / 100) * 163} 163`}
+                  transform="rotate(-90 30 30)"
+                  style={{ transition: "stroke-dasharray 0.5s ease" }}
+                />
+                <text x="30" y="35" textAnchor="middle" fontSize="16" fontWeight="700" fill="currentColor">
+                  {decision.score}
+                </text>
+              </svg>
+            </div>
+          </div>
+          <ul className="mrc-canibuy-reasons">
+            {decision.reasons.map((r, i) => (
+              <li key={i}>{r}</li>
+            ))}
+          </ul>
+          {decision.verdict === "buy-later" && monthsToSave && (
+            <div className="mrc-canibuy-wait-note">
+              ⏱️ Buy outright around <strong>{waitUntil}</strong> at your current pace ({formatMoney(decision.monthlyFreeCash)}/mo free cash flow).
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Payment mode tabs */}
+      {hasDecision && (
+        <section className="mrc-canibuy-card">
+          <div className="mrc-canibuy-tabs">
+            <button
+              type="button"
+              className={`mrc-canibuy-tab ${payMode === "full" ? "mrc-canibuy-tab-active" : ""}`}
+              onClick={() => setPayMode("full")}
+            >
+              💵 Full payment
+            </button>
+            <button
+              type="button"
+              className={`mrc-canibuy-tab ${payMode === "emi" ? "mrc-canibuy-tab-active" : ""}`}
+              onClick={() => setPayMode("emi")}
+            >
+              📅 EMI
+            </button>
+          </div>
+
+          {payMode === "full" ? (
+            <div className="mrc-canibuy-plan">
+              <div className="mrc-canibuy-plan-row">
+                <span>One-time payment</span>
+                <strong>{formatMoney(price)}</strong>
+              </div>
+              <div className="mrc-canibuy-plan-row">
+                <span>Monthly free cash flow</span>
+                <strong>{formatMoney(decision.monthlyFreeCash)}</strong>
+              </div>
+              <div className="mrc-canibuy-plan-row">
+                <span>Months to save up (if not buying now)</span>
+                <strong>{monthsToSave ?? "—"}</strong>
+              </div>
+              <div className={`mrc-canibuy-plan-note ${decision.verdict === "buy-now" ? "mrc-canibuy-note-ok" : "mrc-canibuy-note-info"}`}>
+                {decision.verdict === "buy-now"
+                  ? "Paying in full is ideal — no interest, no new obligations."
+                  : `Wait and save: ${monthsToSave ? `${monthsToSave} month${monthsToSave === 1 ? "" : "s"} to go` : "build free cash flow first"}.`}
+              </div>
+            </div>
+          ) : (
+            <div className="mrc-canibuy-plan">
+              <div className="mrc-canibuy-tenure-row">
+                <span className="mrc-field-label">EMI duration</span>
+                <div className="mrc-canibuy-tenure-options">
+                  {EMI_TENURE_OPTIONS.map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      className={`mrc-canibuy-tenure-btn ${months === m ? "mrc-canibuy-tenure-active" : ""}`}
+                      onClick={() => setUserTenure(m)}
+                    >
+                      {m}m
+                    </button>
+                  ))}
+                </div>
+                <div className="mrc-canibuy-custom-months">
+                  <label htmlFor="mrc-custom-months">Custom months</label>
+                  <input
+                    id="mrc-custom-months"
+                    type="number"
+                    min="1"
+                    max="84"
+                    value={userTenure ?? ""}
+                    onChange={(e) =>
+                      setUserTenure(e.target.value === "" ? null : Math.max(1, Math.min(84, Number(e.target.value) || 1)))
+                    }
+                    placeholder={`${defaultEmiMonths(price)} (auto)`}
+                  />
+                </div>
+              </div>
+
+              <div className="mrc-canibuy-emi-grid">
+                <div className="mrc-canibuy-emi-stat">
+                  <span>Monthly EMI</span>
+                  <strong>{formatMoney(emi)}</strong>
+                </div>
+                <div className="mrc-canibuy-emi-stat">
+                  <span>Total payable</span>
+                  <strong>{formatMoney(total)}</strong>
+                </div>
+                <div className="mrc-canibuy-emi-stat">
+                  <span>Interest cost</span>
+                  <strong>{formatMoney(interest)}</strong>
+                </div>
+                <div className="mrc-canibuy-emi-stat">
+                  <span>Post-EMI surplus</span>
+                  <strong>{formatMoney(Math.max((decision.monthlyFreeCash || 0) - emi, 0))}</strong>
+                </div>
+              </div>
+
+              <div
+                className={`mrc-canibuy-plan-note ${
+                  planEval.feasible ? "mrc-canibuy-note-ok" : "mrc-canibuy-note-warn"
+                }`}
+              >
+                {planEval.feasible ? "✅ " : "⚠️ "}
+                {planEval.message}
+              </div>
+              {planEval.notes?.map((n, i) => (
+                <div key={i} className="mrc-canibuy-plan-subnote">
+                  {n}
+                </div>
+              ))}
+              {price > 0 && decision.verdict === "buy-now" && (
+                <div className="mrc-canibuy-plan-subnote">
+                  💡 Consider a ~10% down payment ({formatMoney(Math.ceil((price * 0.1) / 100) * 100)}) to keep the EMI smaller.
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Context strip: what we know about the user */}
+      <section className="mrc-canibuy-context">
+        <div className="mrc-canibuy-ctx-item">
+          <span>Monthly salary</span>
+          <strong>{formatMoney(salaryForDisplay)}</strong>
+        </div>
+        <div className="mrc-canibuy-ctx-item">
+          <span>Essentials this month</span>
+          <strong>{formatMoney(essentialsActual)}</strong>
+        </div>
+        <div className="mrc-canibuy-ctx-item">
+          <span>Existing EMIs</span>
+          <strong>{formatMoney(maxEmiActual)}</strong>
+        </div>
+        <div className="mrc-canibuy-ctx-item">
+          <span>Emergency fund</span>
+          <strong>{formatMoney(emergencyFundActual)}</strong>
+        </div>
+      </section>
+
+      {!currentSalary && (
+        <div className="mrc-canibuy-salary-hint">
+          Set your monthly take-home salary in the Calculator tab to activate the advisor.
+        </div>
+      )}
+    </div>
+  );
+}

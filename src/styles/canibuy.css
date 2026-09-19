@@ -1,0 +1,457 @@
+/* ============================================================
+   Can I Buy? — purchase advisor section
+   ============================================================ */
+
+.mrc-canibuy {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mrc-canibuy-intro {
+  padding: 4px 0;
+}
+
+.mrc-canibuy-title {
+  margin: 0 0 6px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--mrc-text);
+}
+
+.mrc-canibuy-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--mrc-text-muted);
+  max-width: 640px;
+}
+
+.mrc-canibuy-card {
+  background: var(--mrc-bg-secondary);
+  border: 1px solid var(--mrc-border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* --- price slider --- */
+.mrc-canibuy-price-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mrc-canibuy-price-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--mrc-input-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 12px;
+  padding: 4px 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mrc-canibuy-price-input-wrap:focus-within {
+  border-color: var(--mrc-border-focus);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.mrc-canibuy-price-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 20px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--mrc-text);
+  width: 160px;
+  text-align: right;
+}
+
+.mrc-canibuy-slider {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--mrc-accent) 0%, #7c3aed 100%);
+  outline: none;
+  cursor: pointer;
+}
+
+.mrc-canibuy-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid var(--mrc-accent);
+  box-shadow: 0 2px 6px var(--mrc-shadow);
+  cursor: grab;
+}
+
+.mrc-canibuy-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid var(--mrc-accent);
+  box-shadow: 0 2px 6px var(--mrc-shadow);
+  cursor: grab;
+}
+
+.mrc-canibuy-slider-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--mrc-text-subtle);
+}
+
+.mrc-canibuy-quick-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mrc-canibuy-quick-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--mrc-text-muted);
+  background: var(--mrc-input-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mrc-canibuy-quick-btn:hover {
+  border-color: var(--mrc-accent);
+  color: var(--mrc-accent);
+}
+
+.mrc-canibuy-quick-active {
+  background: var(--mrc-accent);
+  border-color: var(--mrc-accent);
+  color: #ffffff;
+}
+
+/* --- verdict card --- */
+.mrc-canibuy-verdict {
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--mrc-border);
+  background: var(--mrc-bg-secondary);
+}
+
+.mrc-canibuy-verdict-buy-now {
+  border-color: rgba(5, 150, 105, 0.5);
+  background: rgba(5, 150, 105, 0.08);
+  color: #059669;
+}
+
+.mrc-canibuy-verdict-buy-later {
+  border-color: rgba(217, 119, 6, 0.5);
+  background: rgba(217, 119, 6, 0.08);
+  color: #d97706;
+}
+
+.mrc-canibuy-verdict-do-not-buy {
+  border-color: rgba(220, 38, 38, 0.5);
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+}
+
+.mrc-canibuy-verdict-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.mrc-canibuy-verdict-emoji {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.mrc-canibuy-verdict-label {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--mrc-text);
+}
+
+.mrc-canibuy-verdict-summary {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--mrc-text-muted);
+}
+
+.mrc-canibuy-score-ring {
+  margin-left: auto;
+}
+
+.mrc-canibuy-reasons {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--mrc-text-muted);
+}
+
+.mrc-canibuy-wait-note {
+  font-size: 13px;
+  color: var(--mrc-text);
+  background: var(--mrc-input-bg);
+  border: 1px dashed var(--mrc-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+/* --- payment tabs --- */
+.mrc-canibuy-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.mrc-canibuy-tab {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--mrc-text-muted);
+  background: var(--mrc-input-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mrc-canibuy-tab:hover {
+  border-color: var(--mrc-accent);
+}
+
+.mrc-canibuy-tab-active {
+  background: var(--mrc-accent);
+  border-color: var(--mrc-accent);
+  color: #ffffff;
+}
+
+.mrc-canibuy-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mrc-canibuy-plan-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--mrc-text-muted);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--mrc-border);
+}
+
+.mrc-canibuy-plan-row strong {
+  color: var(--mrc-text);
+  font-size: 15px;
+}
+
+.mrc-canibuy-tenure-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mrc-canibuy-tenure-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mrc-canibuy-tenure-btn {
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--mrc-text-muted);
+  background: var(--mrc-input-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mrc-canibuy-tenure-btn:hover {
+  border-color: var(--mrc-accent);
+  color: var(--mrc-accent);
+}
+
+.mrc-canibuy-tenure-active {
+  background: var(--mrc-accent);
+  border-color: var(--mrc-accent);
+  color: #ffffff;
+}
+
+.mrc-canibuy-custom-months {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mrc-canibuy-custom-months label {
+  font-size: 12px;
+  color: var(--mrc-text-muted);
+}
+
+.mrc-canibuy-custom-months input {
+  width: 90px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--mrc-text);
+  background: var(--mrc-input-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 10px;
+  outline: none;
+}
+
+.mrc-canibuy-custom-months input:focus {
+  border-color: var(--mrc-border-focus);
+}
+
+.mrc-canibuy-emi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.mrc-canibuy-emi-stat {
+  background: var(--mrc-input-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mrc-canibuy-emi-stat span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--mrc-text-subtle);
+}
+
+.mrc-canibuy-emi-stat strong {
+  font-size: 15px;
+  color: var(--mrc-text);
+}
+
+.mrc-canibuy-plan-note {
+  font-size: 13px;
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--mrc-border);
+  background: var(--mrc-input-bg);
+  color: var(--mrc-text);
+  line-height: 1.45;
+}
+
+.mrc-canibuy-note-ok {
+  border-color: rgba(5, 150, 105, 0.5);
+  background: rgba(5, 150, 105, 0.08);
+}
+
+.mrc-canibuy-note-warn {
+  border-color: rgba(220, 38, 38, 0.5);
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.mrc-canibuy-note-info {
+  border-color: rgba(217, 119, 6, 0.5);
+  background: rgba(217, 119, 6, 0.08);
+}
+
+.mrc-canibuy-plan-subnote {
+  font-size: 12px;
+  color: var(--mrc-text-muted);
+}
+
+/* --- context strip --- */
+.mrc-canibuy-context {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.mrc-canibuy-ctx-item {
+  background: var(--mrc-bg-secondary);
+  border: 1px solid var(--mrc-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.mrc-canibuy-ctx-item span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--mrc-text-subtle);
+}
+
+.mrc-canibuy-ctx-item strong {
+  font-size: 14px;
+  color: var(--mrc-text);
+}
+
+.mrc-canibuy-salary-hint {
+  font-size: 13px;
+  color: var(--mrc-warning);
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+/* --- responsive --- */
+@media (max-width: 640px) {
+  .mrc-canibuy-title {
+    font-size: 20px;
+  }
+
+  .mrc-canibuy-card,
+  .mrc-canibuy-verdict {
+    padding: 14px;
+  }
+
+  .mrc-canibuy-price-input {
+    width: 120px;
+    font-size: 18px;
+  }
+
+  .mrc-canibuy-verdict-head {
+    flex-wrap: wrap;
+  }
+
+  .mrc-canibuy-score-ring {
+    margin-left: 0;
+  }
+}
