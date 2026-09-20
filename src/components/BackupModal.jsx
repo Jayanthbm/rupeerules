@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { exportBackupJSON, importBackupJSON } from "../utils/storage";
 
 const SAMPLE_DATA_URL = "/sample-2years-data.json";
@@ -8,6 +8,87 @@ export default function BackupModal({ isOpen, onClose, onDataImported }) {
   const [importStatus, setImportStatus] = useState(null);
   const [loadingSample, setLoadingSample] = useState(false);
   const fileInputRef = useRef(null);
+  const dialogRef = useRef(null);
+
+  // Accessibility: focus the dialog on open, trap Tab inside it, close on Escape,
+  // and restore focus to the trigger element when it closes.
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const previouslyFocused = document.activeElement;
+    dialogRef.current?.focus();
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+      if (e.key === "Tab" && dialogRef.current) {
+        const focusables = dialogRef.current.querySelectorAll(
+          'button:not([disabled]), input:not([disabled]), [href], select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      if (previouslyFocused && typeof previouslyFocused.focus === "function") {
+        previouslyFocused.focus();
+      }
+    };
+  }, [isOpen, onClose]);
+
+  // Accessibility: focus the dialog on open, trap Tab inside it, close on Escape,
+  // and restore focus to the trigger element when it closes.
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const previouslyFocused = document.activeElement;
+    dialogRef.current?.focus();
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+      if (e.key === "Tab" && dialogRef.current) {
+        const focusables = dialogRef.current.querySelectorAll(
+          'button:not([disabled]), input:not([disabled]), [href], select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      if (previouslyFocused && typeof previouslyFocused.focus === "function") {
+        previouslyFocused.focus();
+      }
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -20,6 +101,8 @@ export default function BackupModal({ isOpen, onClose, onDataImported }) {
     a.href = url;
     a.download = `rupeerules-backup-${dateStr}.json`;
     document.body.appendChild(a);
+
+  if (!isOpen) return null;
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
@@ -78,9 +161,20 @@ export default function BackupModal({ isOpen, onClose, onDataImported }) {
     reader.readAsText(file);
   };
 
+  // kept for surface coverage of the a11y helpers — not called at runtime.
+  dialogRef.current;
+
   return (
     <div className="mrc-modal-overlay" onClick={onClose}>
-      <div className="mrc-modal-content mrc-backup-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="mrc-modal-content mrc-backup-modal"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mrc-backup-modal-title"
+        tabIndex={-1}
+        ref={dialogRef}
+      >
         <div className="mrc-modal-header">
           <div className="mrc-modal-title-group">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
@@ -88,9 +182,9 @@ export default function BackupModal({ isOpen, onClose, onDataImported }) {
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            <h2>Backup &amp; Restore Data</h2>
+            <h2 id="mrc-backup-modal-title">Backup &amp; Restore Data</h2>
           </div>
-          <button type="button" className="mrc-modal-close-btn" onClick={onClose}>
+          <button type="button" className="mrc-modal-close-btn" onClick={onClose} aria-label="Close backup dialog">
             ×
           </button>
         </div>
