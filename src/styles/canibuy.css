@@ -245,6 +245,15 @@
   color: var(--mrc-text-muted);
 }
 
+.mrc-canibuy-stat-badge {
+  font-size: 13px;
+  color: var(--mrc-text);
+  background: var(--mrc-input-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
 .mrc-canibuy-wait-note {
   font-size: 13px;
   color: var(--mrc-text);
@@ -252,6 +261,62 @@
   border: 1px dashed var(--mrc-border);
   border-radius: 10px;
   padding: 10px 12px;
+}
+
+.mrc-canibuy-opp-cost {
+  background: var(--mrc-input-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mrc-canibuy-opp-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mrc-text);
+}
+
+.mrc-canibuy-opp-desc {
+  font-size: 12px;
+  color: var(--mrc-text-muted);
+}
+
+.mrc-canibuy-opp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.mrc-canibuy-opp-item {
+  background: var(--mrc-bg-secondary);
+  border: 1px solid var(--mrc-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mrc-canibuy-opp-item span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--mrc-text-subtle);
+}
+
+.mrc-canibuy-opp-item strong {
+  font-size: 15px;
+  color: var(--mrc-text);
+}
+
+.mrc-canibuy-opp-gain {
+  font-size: 11px;
+  font-weight: 600;
+  color: #059669;
 }
 
 /* --- payment tabs --- */

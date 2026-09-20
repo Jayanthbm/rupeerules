@@ -38,6 +38,8 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
   const currentSalary = Number(salary) || 0;
   const salaryForDisplay = Number(salaryTransition) || currentSalary;
   const essentialsActual = Number(actuals?.[1]) || 0;
+  const goalsActual = Number(actuals?.[4]) || 0;
+  const investmentsActual = Number(actuals?.[5]) || 0;
   const maxEmiActual = Number(actuals?.[6]) || 0;
   const emergencyFundActual = Number(actuals?.[7]) || 0;
 
@@ -79,11 +81,13 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
         price,
         salary: currentSalary,
         essentialsActual,
+        investmentsActual,
+        goalsActual,
         maxEmiActual,
         emergencyFundActual,
         emergencyFundTarget,
       }),
-    [price, currentSalary, essentialsActual, maxEmiActual, emergencyFundActual, emergencyFundTarget]
+    [price, currentSalary, essentialsActual, investmentsActual, goalsActual, maxEmiActual, emergencyFundActual, emergencyFundTarget]
   );
 
   const planEval = useMemo(
@@ -227,9 +231,34 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
               <li key={i}>{r}</li>
             ))}
           </ul>
+          {decision.workingDays > 0 && (
+            <div className="mrc-canibuy-stat-badge">
+              💼 Costs <strong>{decision.workingDays} working days</strong> of your labor (based on 22 days/mo).
+            </div>
+          )}
           {decision.verdict === "buy-later" && monthsToSave && (
             <div className="mrc-canibuy-wait-note">
               ⏱️ Buy outright around <strong>{waitUntil}</strong> at your current pace ({formatMoney(decision.monthlyFreeCash)}/mo free cash flow).
+            </div>
+          )}
+          {price > 0 && decision.oppCost5Yr > 0 && (
+            <div className="mrc-canibuy-opp-cost">
+              <div className="mrc-canibuy-opp-title">📈 SIP Opportunity Cost (at 12% CAGR)</div>
+              <div className="mrc-canibuy-opp-desc">
+                If this ₹{price.toLocaleString("en-IN")} was invested in an equity index fund instead:
+              </div>
+              <div className="mrc-canibuy-opp-grid">
+                <div className="mrc-canibuy-opp-item">
+                  <span>In 5 Years</span>
+                  <strong>{formatMoney(decision.oppCost5Yr)}</strong>
+                  <span className="mrc-canibuy-opp-gain">+{formatMoney(decision.oppCost5Yr - price)}</span>
+                </div>
+                <div className="mrc-canibuy-opp-item">
+                  <span>In 10 Years</span>
+                  <strong>{formatMoney(decision.oppCost10Yr)}</strong>
+                  <span className="mrc-canibuy-opp-gain">+{formatMoney(decision.oppCost10Yr - price)}</span>
+                </div>
+              </div>
             </div>
           )}
         </section>

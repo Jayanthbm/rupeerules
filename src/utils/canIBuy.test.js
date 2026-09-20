@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   computeEmi,
   computeEmiCost,
+  computeOpportunityCost,
+  computeLaborDays,
   defaultEmiMonths,
   evaluatePurchase,
   evaluatePaymentPlan,
@@ -46,6 +48,32 @@ describe("computeEmiCost", () => {
 
   it("returns zeros for invalid principal", () => {
     expect(computeEmiCost(0, 0.12, 12)).toEqual({ emi: 0, total: 0, interest: 0 });
+  });
+});
+
+describe("computeOpportunityCost", () => {
+  it("calculates compound returns at 12% CAGR over 5 and 10 years", () => {
+    const opp5 = computeOpportunityCost(100000, 5, 0.12);
+    expect(opp5).toBe(176234);
+    const opp10 = computeOpportunityCost(100000, 10, 0.12);
+    expect(opp10).toBe(310585);
+  });
+
+  it("returns 0 for zero or negative amounts", () => {
+    expect(computeOpportunityCost(0)).toBe(0);
+    expect(computeOpportunityCost(-500)).toBe(0);
+  });
+});
+
+describe("computeLaborDays", () => {
+  it("computes labor days based on 22 working days/month", () => {
+    // 50,000 price on 1,10,000 salary (5,000 daily rate) -> 10.0 days
+    expect(computeLaborDays(50000, 110000)).toBe(10);
+  });
+
+  it("handles 0 price or salary safely", () => {
+    expect(computeLaborDays(0, 100000)).toBe(0);
+    expect(computeLaborDays(50000, 0)).toBe(0);
   });
 });
 
@@ -113,9 +141,32 @@ describe("evaluatePurchase", () => {
     expect(d.score).toBeGreaterThanOrEqual(45);
     expect(d.score).toBeLessThan(70);
   });
+  it("warns if purchase disrupts monthly investments/SIPs", () => {
+    const d = evaluatePurchase({
+      ...healthy,
+      price: 180000, // 30k/mo for 6 mo
+      essentialsActual: 40000,
+      maxEmiActual: 10000,
+      investmentsActual: 30000, // free cash = 50k, discretionary = 20k (< 30k)
+    });
+    expect(d.reasons.some((r) => r.includes("pausing or reducing your monthly investments"))).toBe(true);
+  });
 });
 
 describe("evaluatePaymentPlan", () => {
+  it("rejects EMI if combined with existing EMIs exceeds 40% salary", () => {
+    const plan = evaluatePaymentPlan({
+      price: 100000,
+      verdict: "buy-now",
+      salary: 100000,
+      monthlyFreeCash: 50000,
+      existingEmi: 35000, // 35% already
+      months: 6,
+      rate: 0.12,
+    });
+    expect(plan.feasible).toBe(false);
+    expect(plan.message).toContain("exceeding the 40% cap");
+  });
   it("asks for savings when the verdict is buy-later", () => {
     const plan = evaluatePaymentPlan({
       price: 240000,

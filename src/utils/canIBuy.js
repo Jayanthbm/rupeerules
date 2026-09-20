@@ -18,6 +18,10 @@ export const MAX_EMI_SHARE_OF_SURPLUS = 0.4;
 export const MIN_DOWN_PAYMENT_SHARE = 0.1;
 /** Monthly EMI at which the plan is deemed unaffordable regardless of the share. */
 export const EMI_STRESS_ABSOLUTE_CAP = 0.6;
+/** Standard working days per month in India (approx 22-24 days). */
+export const WORKING_DAYS_PER_MONTH = 22;
+/** Expected CAGR for Indian Equity Index/Mutual Funds. */
+export const EQUITY_CAGR_ANNUAL = 0.12;
 
 /** Equal monthly instalment for a principal at a reducing-balance annual rate. */
 export function computeEmi(principal, annualRate, months) {
@@ -35,6 +39,22 @@ export function computeEmiCost(principal, annualRate, months) {
   if (emi === 0) return { emi: 0, total: 0, interest: 0 };
   const total = emi * months;
   return { emi, total, interest: total - principal };
+}
+
+/** Calculate opportunity cost if this lump sum or EMI was invested at equity CAGR. */
+export function computeOpportunityCost(amount, years = 5, annualCagr = EQUITY_CAGR_ANNUAL) {
+  const amt = Number(amount) || 0;
+  if (amt <= 0) return 0;
+  return Math.round(amt * Math.pow(1 + annualCagr, years));
+}
+
+/** Calculate cost in terms of working days of labor. */
+export function computeLaborDays(price, monthlySalary) {
+  const priceNum = Number(price) || 0;
+  const salaryNum = Number(monthlySalary) || 0;
+  if (priceNum <= 0 || salaryNum <= 0) return 0;
+  const dailyRate = salaryNum / WORKING_DAYS_PER_MONTH;
+  return Math.round((priceNum / dailyRate) * 10) / 10;
 }
 
 /** Default tenure months for a given price (shorter tenure for cheaper purchases). */
@@ -55,16 +75,20 @@ export const EMI_TENURE_OPTIONS = [3, 6, 9, 12, 18, 24, 36, 48, 60];
  * @param {object} params
  * @param {number} params.price                 Product price (₹)
  * @param {number} params.salary                Current monthly take-home salary
- * @param {number} params.essentialsActual      Rule 1 actual (essentials spent this month)
- * @param {number} params.maxEmiActual          Rule 6 actual (EMIs already committed this month)
- * @param {number} params.emergencyFundActual   Rule 7 actual (liquid reserves)
- * @param {number} params.emergencyFundTarget   Recommended emergency fund (6× salary or adaptive)
+ * @param {number} [params.essentialsActual]    Rule 1 actual (essentials spent this month)
+ * @param {number} [params.investmentsActual]   Rule 5 actual (SIPs / investments committed)
+ * @param {number} [params.goalsActual]         Rule 4 actual (short-term goals committed)
+ * @param {number} [params.maxEmiActual]        Rule 6 actual (EMIs already committed this month)
+ * @param {number} [params.emergencyFundActual] Rule 7 actual (liquid reserves)
+ * @param {number} [params.emergencyFundTarget] Recommended emergency fund (6× salary or adaptive)
  * @returns verdict object
  */
 export function evaluatePurchase({
   price,
   salary,
   essentialsActual,
+  investmentsActual,
+  goalsActual,
   maxEmiActual,
   emergencyFundActual,
   emergencyFundTarget,
@@ -72,6 +96,8 @@ export function evaluatePurchase({
   const priceNum = Number(price) || 0;
   const salaryNum = Number(salary) || 0;
   const essentials = Number(essentialsActual) || 0;
+  const investments = Number(investmentsActual) || 0;
+  const goals = Number(goalsActual) || 0;
   const existingEmi = Number(maxEmiActual) || 0;
   const ef = Number(emergencyFundActual) || 0;
   const efTarget = Number(emergencyFundTarget) || 0;
@@ -84,6 +110,9 @@ export function evaluatePurchase({
       reasons: ["Enter a product price to get a recommendation."],
       priceShare: 0,
       remainingSalaryAfterEssentials: salaryNum,
+      workingDays: 0,
+      oppCost5Yr: 0,
+      oppCost10Yr: 0,
     };
   }
   if (salaryNum <= 0) {
@@ -93,17 +122,25 @@ export function evaluatePurchase({
       reasons: ["Enter your monthly take-home salary in the calculator first."],
       priceShare: 0,
       remainingSalaryAfterEssentials: 0,
+      workingDays: 0,
+      oppCost5Yr: 0,
+      oppCost10Yr: 0,
     };
   }
 
-  // Full payment affordability: price should fit within a few months of free cash flow
-  // (salary minus essentials minus existing EMIs), and existing EMIs should be under the 40% cap.
+  // Monthly free cash flow after mandatory expenses (essentials + existing EMIs)
   const monthlyFreeCash = Math.max(salaryNum - essentials - existingEmi, 0);
+  const trueDiscretionaryCash = Math.max(salaryNum - essentials - existingEmi - investments - goals, 0);
+
   const priceShareOfAnnual = priceNum / (salaryNum * 12);
-  const emiLoadShare = (existingEmi + priceNum / 6) / salaryNum; // spread over 6 months as a stress test
+  const emiLoadShare = (existingEmi + priceNum / 6) / salaryNum;
   const postBuySurplus = Math.max(salaryNum - essentials - existingEmi - priceNum / 6, 0);
   const postBuySurplusShare = postBuySurplus / salaryNum;
   const efRatio = efTarget > 0 ? ef / efTarget : 0;
+
+  const workingDays = computeLaborDays(priceNum, salaryNum);
+  const oppCost5Yr = computeOpportunityCost(priceNum, 5);
+  const oppCost10Yr = computeOpportunityCost(priceNum, 10);
 
   let score = 100;
 
@@ -111,13 +148,13 @@ export function evaluatePurchase({
   if (emiLoadShare > 0.4) {
     const penalty = Math.min(40, Math.round((emiLoadShare - 0.4) * 100));
     score -= penalty;
-    reasons.push(`Your existing EMIs plus this purchase spread over 6 months would cross the 40% salary cap.`);
+    reasons.push("Your existing EMIs plus this purchase spread over 6 months would cross the 40% salary cap.");
   } else {
     score += 5;
     reasons.push("Existing EMI load is comfortably under the 40% cap.");
   }
 
-  // 2. Cash-flow headroom
+  // 2. Cash-flow headroom & SIP protection
   if (monthlyFreeCash < priceNum / 6) {
     const monthsNeeded = monthlyFreeCash > 0 ? Math.ceil(priceNum / monthlyFreeCash) : null;
     score -= 20;
@@ -126,9 +163,12 @@ export function evaluatePurchase({
         ? `At your current free cash flow, it takes about ${monthsNeeded} months of saving to afford this outright.`
         : "You currently have no free cash flow after essentials and EMIs."
     );
+  } else if (investments > 0 && trueDiscretionaryCash < priceNum / 6) {
+    reasons.push(`Affording this outright or via fast payment may require pausing or reducing your monthly investments (${formatMoney(investments)}/mo).`);
+    score -= 5;
   } else {
     score += 10;
-    reasons.push("You have healthy monthly free cash flow relative to this price.");
+    reasons.push("You have healthy monthly free cash flow relative to this price without pausing investments.");
   }
 
   // 3. Safety net
@@ -197,21 +237,34 @@ export function evaluatePurchase({
     priceShareOfAnnual,
     emiLoadShare,
     monthlyFreeCash,
+    trueDiscretionaryCash,
     postBuySurplus,
     postBuySurplusShare,
     efRatio,
     remainingSalaryAfterEssentials: monthlyFreeCash,
+    workingDays,
+    oppCost5Yr,
+    oppCost10Yr,
   };
 }
 
 /**
  * Evaluate a specific payment plan (full vs EMI) for the buy verdicts.
- * Returns { feasible, message } — feasible plans get a green light.
+ * Returns { feasible, message, notes } — feasible plans get a green light.
  */
-export function evaluatePaymentPlan({ price, verdict, salary, monthlyFreeCash, months, rate = EMI_ANNUAL_RATE }) {
+export function evaluatePaymentPlan({
+  price,
+  verdict,
+  salary,
+  monthlyFreeCash,
+  existingEmi = 0,
+  months,
+  rate = EMI_ANNUAL_RATE,
+}) {
   const priceNum = Number(price) || 0;
   const salaryNum = Number(salary) || 0;
   const freeCash = Number(monthlyFreeCash) || 0;
+  const committedEmi = Number(existingEmi) || 0;
   const monthsNum = Number(months) || 0;
 
   if (!priceNum || !salaryNum) {
@@ -240,6 +293,19 @@ export function evaluatePaymentPlan({ price, verdict, salary, monthlyFreeCash, m
 
   if (monthsNum <= 0) {
     return { feasible: false, message: "Select a valid EMI tenure." };
+  }
+
+  const combinedEmi = committedEmi + emi;
+  const combinedEmiShareOfSalary = salaryNum > 0 ? combinedEmi / salaryNum : 0;
+
+  if (combinedEmiShareOfSalary > 0.4) {
+    return {
+      feasible: false,
+      emi,
+      total,
+      interest,
+      message: `Adding this EMI (${formatMoney(emi)}) would push your total EMIs to ${formatMoney(combinedEmi)} (${Math.round(combinedEmiShareOfSalary * 100)}% of salary), exceeding the 40% cap.`,
+    };
   }
 
   const postEmiSurplus = freeCash - emi;
@@ -288,7 +354,9 @@ export function evaluatePaymentPlan({ price, verdict, salary, monthlyFreeCash, m
 
   const interestShare = priceNum > 0 ? interest / priceNum : 0;
   const reasons = [];
-  if (interestShare > 0.1) {
+  if (rate === 0) {
+    reasons.push("No-cost EMI: zero interest (note: bank processing fee of ~₹199 + 18% GST may still apply).");
+  } else if (interestShare > 0.1) {
     reasons.push(`Total interest over ${monthsNum} months: ${formatMoney(interest)} (${Math.round(interestShare * 100)}% of price).`);
   }
 
