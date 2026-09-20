@@ -21,6 +21,9 @@ Personal finance budgeting ledger and money rules calculator tailored for Indian
   - **Income Replacement Corpus (FIRE number)**: Target 120× monthly salary with timeline estimates
 - **Interactive Itemized Breakdowns**:
   - Custom category names, `+ Add item`, `× Remove item`, and real-time subtotal summation.
+- **Can I Buy? Purchase Advisor**:
+  - Enter or slide a product price and get an instant **Buy now / Buy later / Not advisable** verdict scored against your salary, essentials, existing EMIs, and emergency fund.
+  - Choose **Full payment** or **EMI** — for EMI, pick a tenure (3–60 months or custom) and see monthly EMI, total payable, interest cost, and post-EMI surplus with an affordability check.
 - **Analytics & Reports Dashboard**:
   - Month-over-month trend table, average wealth/savings rate, and total tracked allocations.
 - **Data Backup & Portability**:

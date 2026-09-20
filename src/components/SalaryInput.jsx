@@ -26,6 +26,7 @@ export default function SalaryInput({
               onSalaryCommit();
             }
           }}
+          onBlur={onSalaryCommit}
           placeholder="e.g. 50000"
           aria-label="Monthly take-home salary"
         />
