@@ -56,19 +56,40 @@ function sumList(list) {
   return { sum, hasAny };
 }
 
-/** Keep Rule 8's linked Emergency Fund row in sync with Rule 7's value. Pure. */
+/** Keep Rule 8's fixed rows (and linked Emergency Fund) intact in items. Pure. */
 function syncEmergencyRow(items, efValue) {
   const fireList = items[8] || [];
-  const hasEmergency = fireList.some((it) => it.id === "w3_emergency");
-  const emergencyRow = {
-    id: "w3_emergency",
-    name: "Emergency Fund (Liquid Reserves)",
-    amount: efValue > 0 ? efValue : "",
-    isLinked: true,
-  };
+  const rule8Defaults = ALL_RULES.find((r) => r.id === 8)?.defaultItems || [];
+
+  // Index existing items by ID
+  const existingMap = new Map();
+  for (const it of fireList) {
+    if (it && it.id) existingMap.set(it.id, it);
+  }
+
+  // Ensure all fixed defaults exist with isFixed / isLinked preserved
+  const mergedFixed = rule8Defaults.map((def) => {
+    const existing = existingMap.get(def.id);
+    if (def.id === "w3_emergency") {
+      return {
+        ...def,
+        amount: efValue > 0 ? efValue : "",
+      };
+    }
+    return {
+      ...def,
+      amount: (existing && existing.amount !== "" && existing.amount !== undefined && existing.amount !== null)
+        ? existing.amount
+        : 0,
+    };
+  });
+
+  // Preserve any custom user-added items
+  const customItems = fireList.filter((it) => it && !rule8Defaults.some((def) => def.id === it.id));
+
   return {
     ...items,
-    8: hasEmergency ? fireList.map((it) => (it.id === "w3_emergency" ? emergencyRow : it)) : [emergencyRow, ...fireList],
+    8: [...mergedFixed, ...customItems],
   };
 }
 

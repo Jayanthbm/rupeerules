@@ -16,6 +16,7 @@ export default function RuleCard({
   onSortBreakdownItems,
 }) {
   const hasBreakdownOption = Boolean(rule.defaultItems);
+  const isAlwaysBreakdown = Boolean(rule.alwaysBreakdown);
   const [showBreakdown, setShowBreakdown] = useState(() => hasBreakdownOption);
   const [isBreakdownCollapsed, setIsBreakdownCollapsed] = useState(false);
 
@@ -84,7 +85,7 @@ export default function RuleCard({
                 {item.adaptiveBadge.icon} {item.adaptiveBadge.text}
               </span>
             )}
-            {hasBreakdownOption && (
+            {hasBreakdownOption && !isAlwaysBreakdown && (
               <button
                 type="button"
                 className="mrc-breakdown-toggle-btn"
@@ -180,7 +181,7 @@ export default function RuleCard({
                           className="mrc-breakdown-name-input"
                           value={subItem.name}
                           placeholder="Asset item (e.g. Mutual Funds)"
-                          disabled={isLinkedItem}
+                          disabled={isLinkedItem || subItem.isFixed}
                           onChange={(e) => onUpdateBreakdownItem(rule.id, subItem.id, "name", e.target.value)}
                           onBlur={handleAmountBlur}
                         />
@@ -203,7 +204,7 @@ export default function RuleCard({
                             onBlur={handleAmountBlur}
                           />
                         </div>
-                        {!isLinkedItem && (
+                        {!isLinkedItem && !subItem.isFixed && (
                           <button
                             type="button"
                             className="mrc-breakdown-del-btn"
