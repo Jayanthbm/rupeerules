@@ -7,7 +7,7 @@ const GOALS_STORAGE_KEY = 'rupeerules_goals_v1';
 export const DEFAULT_GOALS_DATA = {
   houseAppreciationRate: 3,
   dreamMilestonePreset: 'standard', // 'lightweight' (5%), 'standard' (15%), 'big-bet' (25%)
-  trip: { checked: false, age: '', year: '', country: '' },
+  trip: { checked: false, age: '', year: '', country: '', totalSpent: '' },
   car: { checked: false, name: '', price: '', year: '' },
   houses: [], // max 5: { id, name, price, year, remainingEmi, useManualValue, currentValue }
   secondIncome: { checked: false },
@@ -136,9 +136,13 @@ export function computeGoalStatuses(goalsData, actuals, breakdownItems, salary, 
   });
 
   // Fallback to salary if no valid months found or total expense is 0
-  let avgEmergencyExpense = validMonthsCount > 0 && totalEfExpenses > 0
+  const isAvgUsed = validMonthsCount > 0 && totalEfExpenses > 0;
+  let avgEmergencyExpense = isAvgUsed
     ? totalEfExpenses / validMonthsCount
     : (Number(salary) || 0);
+  const expenseSource = isAvgUsed
+    ? `${validMonthsCount}-month average`
+    : 'current salary fallback';
 
   // Total Assets & Net Worth
   const totalAssets = efActual + fireActual + totalHouseValue;
@@ -222,8 +226,25 @@ export function computeGoalStatuses(goalsData, actuals, breakdownItems, salary, 
   let updatedAchieved = { ...goalsData.achieved };
   let achievementsChanged = false;
 
+  // Calculate earliest house purchase year for G5 (Own a House)
+  let earliestHouseYear = null;
+  if (g5Done) {
+    const validYears = (goalsData.houses || [])
+      .filter(h => h.price && Number(h.price) > 0 && h.year && Number(h.year) > 0)
+      .map(h => Number(h.year));
+    if (validYears.length > 0) {
+      earliestHouseYear = Math.min(...validYears).toString();
+    }
+  }
+
   Object.keys(rawStatuses).forEach(key => {
-    if (rawStatuses[key].done && !updatedAchieved[key]) {
+    if (key === 'g5' && rawStatuses.g5.done) {
+      const houseAchievedVal = earliestHouseYear || updatedAchieved.g5 || currentMonthStr;
+      if (updatedAchieved.g5 !== houseAchievedVal) {
+        updatedAchieved.g5 = houseAchievedVal;
+        achievementsChanged = true;
+      }
+    } else if (rawStatuses[key].done && !updatedAchieved[key]) {
       updatedAchieved[key] = currentMonthStr;
       achievementsChanged = true;
     } else if (!rawStatuses[key].done && updatedAchieved[key]) {
@@ -246,12 +267,15 @@ export function computeGoalStatuses(goalsData, actuals, breakdownItems, salary, 
     overallPercentage,
     weights,
     metrics: {
+      efActual,
+      fireActual,
       investPortfolio,
       totalHouseValue,
       totalHouseEmi,
       totalAssets,
       netWorth,
       avgEmergencyExpense,
+      expenseSource,
       g8ProjectionText
     }
   };

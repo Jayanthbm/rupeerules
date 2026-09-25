@@ -1,6 +1,6 @@
 {
   "appName": "RupeeRules",
-  "version": 2,
+  "version": 3,
   "exportedAt": "2026-09-09T18:15:00.000Z",
   "data": {
     "activeMonth": "2026-09",
@@ -167,6 +167,29 @@
         "items": {},
         "updatedAt": 1796688000000
       }
+    }
+  },
+  "goals": {
+    "houseAppreciationRate": 3,
+    "dreamMilestonePreset": "standard",
+    "trip": { "checked": true, "age": "28", "year": "2024", "country": "Japan", "totalSpent": "180000" },
+    "car": { "checked": true, "name": "Nexon EV", "price": "1450000", "year": "2023" },
+    "houses": [
+      { "id": "h1", "name": "2BHK Apartment", "price": "6500000", "year": "2021", "remainingEmi": "4200000", "useManualValue": false, "currentValue": "" }
+    ],
+    "secondIncome": { "checked": true },
+    "passiveIncome": { "checked": true, "monthlyAmount": "15000" },
+    "achieved": {
+      "g1": "2023-05",
+      "g2": "2025-08",
+      "g3": "2024-04",
+      "g4": "2023-11",
+      "g5": "2021-02",
+      "g6": "2025-01",
+      "g7": null,
+      "g8": null,
+      "g9": null,
+      "g10": null
     }
   }
 }

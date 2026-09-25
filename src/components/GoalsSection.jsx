@@ -11,6 +11,8 @@ import '../styles/goals.css';
 
 export default function GoalsSection({ salary, actuals, breakdownItems, storeMonths, onNavigateToCalculator }) {
   const [goalsData, setGoalsData] = useState(() => loadGoalsData());
+  const [editingAchievedGoal, setEditingAchievedGoal] = useState(null); // goal id being edited (e.g. 'g1')
+
 
   // Save changes to localStorage whenever goalsData changes
   useEffect(() => {
@@ -109,7 +111,7 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
       title: '₹1L in Account',
       weight: weights.g1,
       isProgress: true,
-      renderDetails: () => (
+      renderDetails: (isDone) => isDone ? null : (
         <div>
           <div>Current Emergency Savings: <strong>{formatMoney(actuals[7] || 0)}</strong> / {formatMoney(100000)}</div>
         </div>
@@ -148,27 +150,48 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
           </label>
           {goalsData.trip?.checked && (
             <div className="goal-inline-row">
-              <span>Target/Achieved Age:</span>
-              <input
-                type="number"
-                style={{ width: 70 }}
-                value={goalsData.trip?.age || ''}
-                onChange={e => updateField('trip.age', e.target.value)}
-              />
-              <span>Year:</span>
-              <input
-                type="number"
-                style={{ width: 90 }}
-                value={goalsData.trip?.year || ''}
-                onChange={e => updateField('trip.year', e.target.value)}
-              />
-              <span>Country:</span>
-              <input
-                type="text"
-                placeholder="e.g. Japan"
-                value={goalsData.trip?.country || ''}
-                onChange={e => updateField('trip.country', e.target.value)}
-              />
+              <div className="goal-field-unit">
+                <span className="goal-field-label">Target/Achieved Age</span>
+                <input
+                  type="number"
+                  className="house-input"
+                  style={{ width: 100 }}
+                  placeholder="e.g. 28"
+                  value={goalsData.trip?.age || ''}
+                  onChange={e => updateField('trip.age', e.target.value)}
+                />
+              </div>
+              <div className="goal-field-unit">
+                <span className="goal-field-label">Year</span>
+                <input
+                  type="number"
+                  className="house-input"
+                  style={{ width: 100 }}
+                  placeholder="e.g. 2026"
+                  value={goalsData.trip?.year || ''}
+                  onChange={e => updateField('trip.year', e.target.value)}
+                />
+              </div>
+              <div className="goal-field-unit">
+                <span className="goal-field-label">Country</span>
+                <input
+                  type="text"
+                  className="house-input"
+                  placeholder="e.g. Japan"
+                  value={goalsData.trip?.country || ''}
+                  onChange={e => updateField('trip.country', e.target.value)}
+                />
+              </div>
+              <div className="goal-field-unit">
+                <span className="goal-field-label">Total Spent (₹)</span>
+                <input
+                  type="number"
+                  className="house-input"
+                  placeholder="e.g. 150000"
+                  value={goalsData.trip?.totalSpent || ''}
+                  onChange={e => updateField('trip.totalSpent', e.target.value)}
+                />
+              </div>
             </div>
           )}
         </div>
@@ -193,27 +216,37 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
           </label>
           {goalsData.car?.checked && (
             <div className="goal-inline-row">
-              <span>Car Model:</span>
-              <input
-                type="text"
-                placeholder="e.g. Nexon EV"
-                value={goalsData.car?.name || ''}
-                onChange={e => updateField('car.name', e.target.value)}
-              />
-              <span>Price (₹):</span>
-              <input
-                type="number"
-                placeholder="Price"
-                value={goalsData.car?.price || ''}
-                onChange={e => updateField('car.price', e.target.value)}
-              />
-              <span>Year:</span>
-              <input
-                type="number"
-                style={{ width: 90 }}
-                value={goalsData.car?.year || ''}
-                onChange={e => updateField('car.year', e.target.value)}
-              />
+              <div className="goal-field-unit">
+                <span className="goal-field-label">Car Model</span>
+                <input
+                  type="text"
+                  className="house-input"
+                  placeholder="e.g. Nexon EV"
+                  value={goalsData.car?.name || ''}
+                  onChange={e => updateField('car.name', e.target.value)}
+                />
+              </div>
+              <div className="goal-field-unit">
+                <span className="goal-field-label">Price (₹)</span>
+                <input
+                  type="number"
+                  className="house-input"
+                  placeholder="Price"
+                  value={goalsData.car?.price || ''}
+                  onChange={e => updateField('car.price', e.target.value)}
+                />
+              </div>
+              <div className="goal-field-unit">
+                <span className="goal-field-label">Year</span>
+                <input
+                  type="number"
+                  className="house-input"
+                  style={{ width: 100 }}
+                  placeholder="Year"
+                  value={goalsData.car?.year || ''}
+                  onChange={e => updateField('car.year', e.target.value)}
+                />
+              </div>
             </div>
           )}
         </div>
@@ -339,7 +372,7 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
       renderDetails: () => (
         <div>
           <div style={{ marginBottom: 8 }}>
-            Est. Monthly Emergency Expense (3-mo avg or salary): <strong>{formatMoney(metrics.avgEmergencyExpense)}</strong>
+            Est. Monthly Emergency Expense ({metrics.expenseSource || '3-mo avg or salary'}): <strong>{formatMoney(metrics.avgEmergencyExpense)}</strong>
           </div>
           <div className="goal-input-group">
             <label className="goal-inline-row">
@@ -352,13 +385,16 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
             </label>
             {goalsData.passiveIncome?.checked && (
               <div className="goal-inline-row" style={{ marginTop: 6 }}>
-                <span>Monthly Passive Amount (₹):</span>
-                <input
-                  type="number"
-                  placeholder="e.g. 25000"
-                  value={goalsData.passiveIncome?.monthlyAmount || ''}
-                  onChange={e => updateField('passiveIncome.monthlyAmount', e.target.value)}
-                />
+                <div className="goal-field-unit">
+                  <span className="goal-field-label">Monthly Passive Amount (₹)</span>
+                  <input
+                    type="number"
+                    className="house-input"
+                    placeholder="e.g. 25000"
+                    value={goalsData.passiveIncome?.monthlyAmount || ''}
+                    onChange={e => updateField('passiveIncome.monthlyAmount', e.target.value)}
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -374,10 +410,28 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
       isProgress: true,
       renderDetails: () => (
         <div>
-          <div>Includes Emergency Fund + FIRE Corpus + Current House Values</div>
           <div>Total Assets: <strong>{formatMoney(metrics.totalAssets)}</strong> / {formatMoney(10000000)}</div>
+          
+          <div className="goal-breakdown-box" style={{ marginTop: 8, padding: '8px 12px', background: 'var(--mrc-bg-tertiary)', borderRadius: 8, border: '1px solid var(--mrc-border)', fontSize: '0.825rem' }}>
+            <div style={{ fontWeight: 600, marginBottom: 4, color: 'var(--mrc-text)' }}>Asset Breakdown:</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, color: 'var(--mrc-text-muted)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>• Emergency Fund (Rule 7):</span>
+                <strong>{formatMoney(metrics.efActual)}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>• Investment Corpus (Rule 8):</span>
+                <strong>{formatMoney(metrics.fireActual)}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>• Real Estate Est. Value ({goalsData.houses?.length || 0} properties):</span>
+                <strong>{formatMoney(metrics.totalHouseValue)}</strong>
+              </div>
+            </div>
+          </div>
+
           {metrics.g8ProjectionText && (
-            <div style={{ fontSize: '0.8rem', color: 'var(--mrc-accent, #2563eb)', marginTop: 6, fontWeight: 500 }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--mrc-accent, #2563eb)', marginTop: 8, fontWeight: 500 }}>
               ⏱️ {metrics.g8ProjectionText}
             </div>
           )}
@@ -393,9 +447,27 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
       isProgress: true,
       renderDetails: () => (
         <div>
-          <div>Net Worth = Total Assets − Total Remaining EMIs</div>
           <div>Current Net Worth: <strong>{formatMoney(metrics.netWorth)}</strong> / {formatMoney(100000000)}</div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>
+
+          <div className="goal-breakdown-box" style={{ marginTop: 8, padding: '8px 12px', background: 'var(--mrc-bg-tertiary)', borderRadius: 8, border: '1px solid var(--mrc-border)', fontSize: '0.825rem' }}>
+            <div style={{ fontWeight: 600, marginBottom: 4, color: 'var(--mrc-text)' }}>Net Worth Breakdown:</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, color: 'var(--mrc-text-muted)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>• Total Assets (EF + Investments + Property):</span>
+                <strong>+{formatMoney(metrics.totalAssets)}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ef4444' }}>
+                <span>• Less Total Remaining House Loans:</span>
+                <strong>−{formatMoney(metrics.totalHouseEmi)}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed var(--mrc-border)', paddingTop: 4, marginTop: 2, color: 'var(--mrc-text)' }}>
+                <span>= Net Worth:</span>
+                <strong>{formatMoney(metrics.netWorth)}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ fontSize: '0.8rem', color: 'var(--mrc-text-muted)', marginTop: 6 }}>
             Tip: Complete ₹1Cr milestone (Goal 8) first
           </div>
         </div>
@@ -443,7 +515,8 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
             <span>House Appreciation Rate:</span>
             <input
               type="number"
-              style={{ width: 60 }}
+              className="house-input"
+              style={{ width: 70, display: 'inline-block' }}
               value={goalsData.houseAppreciationRate ?? 3}
               onChange={e => updateField('houseAppreciationRate', Number(e.target.value))}
             />
@@ -453,6 +526,7 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
           <div className="goals-setting-item">
             <span>Dream Milestone Weight:</span>
             <select
+              className="goal-select"
               value={goalsData.dreamMilestonePreset || 'standard'}
               onChange={e => updateField('dreamMilestonePreset', e.target.value)}
             >
@@ -473,6 +547,8 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
           const achievedDate = achieved[def.id];
           const weightPct = Math.round(def.weight * 100);
 
+          const isG1 = def.id === 'g1';
+
           return (
             <div key={def.id} className={`goal-card ${isDone ? 'completed' : ''}`}>
               <div className="goal-card-header">
@@ -481,11 +557,21 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
                   <h3 className="goal-title">{def.title}</h3>
                   <span className="goal-weight-tag">{weightPct}% weight</span>
                 </div>
-                <div className={`goal-status-badge ${isDone ? 'achieved' : 'pending'}`}>
+                <div
+                  className={`goal-status-badge ${isDone ? 'achieved' : 'pending'}`}
+                  style={isDone && isG1 ? { cursor: 'pointer' } : {}}
+                  onClick={() => {
+                    if (isDone && isG1) {
+                      setEditingAchievedGoal(prev => prev === def.id ? null : def.id);
+                    }
+                  }}
+                  title={isDone && isG1 ? "Click to edit achieved date/year" : ""}
+                >
                   {isDone ? (
                     <>
                       <span>🏆 Achieved</span>
                       {achievedDate && <span style={{ fontSize: '0.75rem', opacity: 0.85 }}>({achievedDate})</span>}
+                      {isG1 && <span style={{ fontSize: '0.7rem', opacity: 0.75, marginLeft: 2 }}>✏️</span>}
                     </>
                   ) : (
                     <span>In Progress</span>
@@ -494,7 +580,35 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
               </div>
 
               <div className="goal-card-body">
-                {def.renderDetails()}
+                {isDone && isG1 && editingAchievedGoal === def.id && (
+                  <div className="goal-input-group" style={{ marginTop: 4, marginBottom: 10, padding: '10px 14px' }}>
+                    <div className="goal-inline-row">
+                      <div className="goal-field-unit">
+                        <span className="goal-field-label">Achieved Date / Year</span>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                          <input
+                            type="text"
+                            className="house-input"
+                            style={{ width: 140 }}
+                            placeholder="e.g. 2024 or 2024-05"
+                            value={goalsData.achieved?.[def.id] || ''}
+                            onChange={e => updateField(`achieved.${def.id}`, e.target.value)}
+                          />
+                          <button
+                            type="button"
+                            className="house-add-btn"
+                            style={{ marginTop: 0, padding: '6px 12px', fontSize: '0.8rem' }}
+                            onClick={() => setEditingAchievedGoal(null)}
+                          >
+                            Done
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {def.renderDetails(isDone)}
 
                 {def.isProgress && !isDone && (
                   <div className="goal-mini-progress">
