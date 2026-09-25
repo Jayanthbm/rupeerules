@@ -1,3 +1,5 @@
+import { loadGoalsData, saveGoalsData, clearGoalsData } from "./goals.js";
+
 export const STORAGE_KEY = "rupeerules_store_v2";
 export const LEGACY_STORAGE_KEY = "mrc_state_v1";
 
@@ -93,11 +95,13 @@ export function saveAllData(store) {
 
 export function exportBackupJSON() {
   const data = loadAllData();
+  const goals = loadGoalsData();
   const payload = {
     appName: "RupeeRules",
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     data,
+    goals,
   };
   return JSON.stringify(payload, null, 2);
 }
@@ -138,6 +142,11 @@ export function importBackupJSON(jsonString) {
     };
 
     saveAllData(newStore);
+
+    if (parsed.goals && typeof parsed.goals === "object") {
+      saveGoalsData(parsed.goals);
+    }
+
     return { success: true, count: Object.keys(monthsData).length };
   } catch (err) {
     return { success: false, error: err.message || "Failed to parse import file" };
@@ -149,7 +158,9 @@ export function clearSavedState() {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(LEGACY_STORAGE_KEY);
     localStorage.removeItem("mrc_darkmode");
+    clearGoalsData();
   } catch {
     // Ignore errors
   }
 }
+

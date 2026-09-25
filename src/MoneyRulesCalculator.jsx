@@ -3,6 +3,7 @@ import { useDarkMode } from "./hooks/useDarkMode";
 import { useMoneyRules } from "./hooks/useMoneyRules";
 import Header from "./components/Header";
 import CanIBuySection from "./components/CanIBuySection";
+import GoalsSection from "./components/GoalsSection";
 import MonthPicker from "./components/MonthPicker";
 import SalaryInput from "./components/SalaryInput";
 import EmptyState from "./components/EmptyState";
@@ -12,7 +13,7 @@ import BackupModal from "./components/BackupModal";
 
 export default function MoneyRulesCalculator() {
   const [darkMode, setDarkMode] = useDarkMode();
-  const [currentView, setCurrentView] = useState("calculator"); // 'calculator' | 'canibuy' | 'reports'
+  const [currentView, setCurrentView] = useState("calculator"); // 'calculator' | 'canibuy' | 'reports' | 'goals'
   const [showBackup, setShowBackup] = useState(false);
 
   const {
@@ -46,8 +47,10 @@ export default function MoneyRulesCalculator() {
         darkMode={darkMode}
         currentView={currentView}
         onToggleDarkMode={() => setDarkMode((prev) => !prev)}
-        onOpenReports={() => setCurrentView((prev) => (prev === "reports" ? "calculator" : "reports"))}
-        onOpenCanIBuy={() => setCurrentView((prev) => (prev === "canibuy" ? "calculator" : "canibuy"))}
+        onOpenCalculator={() => setCurrentView("calculator")}
+        onOpenReports={() => setCurrentView("reports")}
+        onOpenGoals={() => setCurrentView("goals")}
+        onOpenCanIBuy={() => setCurrentView("canibuy")}
         onOpenBackup={() => setShowBackup(true)}
       />
 
@@ -63,6 +66,14 @@ export default function MoneyRulesCalculator() {
           actuals={actuals}
           emergencyFundTarget={ruleMap?.[7]?.recommended || 0}
           avgEmiSurplus={salaryTransition * 0.2}
+        />
+      ) : currentView === "goals" ? (
+        <GoalsSection
+          salary={salaryTransition}
+          actuals={actuals}
+          breakdownItems={breakdownItems}
+          storeMonths={store?.months || {}}
+          onNavigateToCalculator={() => setCurrentView("calculator")}
         />
       ) : (
         <>
@@ -109,4 +120,5 @@ export default function MoneyRulesCalculator() {
     </div>
   );
 }
+
 

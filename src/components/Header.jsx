@@ -2,11 +2,15 @@ export default function Header({
   darkMode,
   currentView,
   onToggleDarkMode,
+  onOpenCalculator,
   onOpenReports,
-  onOpenBackup,
+  onOpenGoals,
   onOpenCanIBuy,
+  onOpenBackup,
 }) {
+  const isCalculator = currentView === "calculator";
   const isReports = currentView === "reports";
+  const isGoals = currentView === "goals";
   const isCanIBuy = currentView === "canibuy";
 
   return (
@@ -19,12 +23,63 @@ export default function Header({
         <p className="mrc-tagline">smart money rules for your take-home pay</p>
       </div>
       <div className="mrc-header-actions">
+        {/* 1. Calculator */}
+        <button
+          type="button"
+          className={`mrc-header-icon-btn ${isCalculator ? "mrc-header-btn-active" : ""}`}
+          onClick={onOpenCalculator}
+          title="Money Rules Calculator"
+          aria-label="Calculator"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
+            <rect x="4" y="2" width="16" height="20" rx="2" />
+            <line x1="8" y1="6" x2="16" y2="6" />
+            <line x1="8" y1="10" x2="16" y2="10" />
+            <line x1="8" y1="14" x2="16" y2="14" />
+            <line x1="8" y1="18" x2="16" y2="18" />
+          </svg>
+          <span className="mrc-btn-text-desktop">Calculator</span>
+        </button>
+
+        {/* 2. Reports */}
+        <button
+          type="button"
+          className={`mrc-header-icon-btn ${isReports ? "mrc-header-btn-active" : ""}`}
+          onClick={onOpenReports}
+          title="Monthly Reports & Trends"
+          aria-label="Reports"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+          <span className="mrc-btn-text-desktop">Reports</span>
+        </button>
+
+        {/* 3. Goals */}
+        <button
+          type="button"
+          className={`mrc-header-icon-btn ${isGoals ? "mrc-header-btn-active" : ""}`}
+          onClick={onOpenGoals}
+          title="Financial Goals"
+          aria-label="Goals"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
+            <circle cx="12" cy="12" r="10" />
+            <circle cx="12" cy="12" r="6" />
+            <circle cx="12" cy="12" r="2" />
+          </svg>
+          <span className="mrc-btn-text-desktop">Goals</span>
+        </button>
+
+        {/* 4. Can I Buy */}
         <button
           type="button"
           className={`mrc-header-icon-btn ${isCanIBuy ? "mrc-header-btn-active" : ""}`}
           onClick={onOpenCanIBuy}
-          title={isCanIBuy ? "Return to Calculator" : "Can I buy this? — purchase advisor"}
-          aria-label={isCanIBuy ? "Calculator" : "Can I buy"}
+          title="Can I buy this? — purchase advisor"
+          aria-label="Can I buy"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
             <circle cx="9" cy="21" r="1" />
@@ -34,31 +89,7 @@ export default function Header({
           <span className="mrc-btn-text-desktop">Can I buy?</span>
         </button>
 
-        <button
-          type="button"
-          className={`mrc-header-icon-btn ${isReports ? "mrc-header-btn-active" : ""}`}
-          onClick={onOpenReports}
-          title={isReports ? "Return to Calculator" : "View monthly reports & trends"}
-          aria-label={isReports ? "Calculator" : "Reports"}
-        >
-          {isReports ? (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
-              <rect x="4" y="2" width="16" height="20" rx="2" />
-              <line x1="8" y1="6" x2="16" y2="6" />
-              <line x1="8" y1="10" x2="16" y2="10" />
-              <line x1="8" y1="14" x2="16" y2="14" />
-              <line x1="8" y1="18" x2="16" y2="18" />
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
-              <line x1="18" y1="20" x2="18" y2="10" />
-              <line x1="12" y1="20" x2="12" y2="4" />
-              <line x1="6" y1="20" x2="6" y2="14" />
-            </svg>
-          )}
-          <span className="mrc-btn-text-desktop">{isReports ? "Calculator" : "Reports"}</span>
-        </button>
-
+        {/* 5. Backup */}
         <button
           type="button"
           className="mrc-header-icon-btn"
@@ -74,6 +105,7 @@ export default function Header({
           <span className="mrc-btn-text-desktop">Backup</span>
         </button>
 
+        {/* 6. Theme Switcher */}
         <button
           type="button"
           className="mrc-dark-toggle"
@@ -96,3 +128,4 @@ export default function Header({
     </header>
   );
 }
+
