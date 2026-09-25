@@ -35,16 +35,6 @@ export default function ReportsPage({ onBackToCalculator, store }) {
   return (
     <div className="mrc-reports-page">
       <div className="mrc-page-nav-bar">
-        <button
-          type="button"
-          className="mrc-back-btn"
-          onClick={onBackToCalculator}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-          Back to Calculator
-        </button>
         <h1 className="mrc-page-title">Financial Reports &amp; Analytics</h1>
 
         {availableYears.length > 0 && (

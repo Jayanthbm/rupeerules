@@ -236,6 +236,11 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
               💼 Costs <strong>{decision.workingDays} working days</strong> of your labor (based on 22 days/mo).
             </div>
           )}
+          {payMode === "emi" && price > 0 && maxEmiActual > 0 && (
+            <div className="mrc-canibuy-stat-badge" style={{ marginTop: 8 }}>
+              ⚠️ Adding an EMI for this purchase increases your Rule 6 Total EMI load (current: {formatMoney(maxEmiActual)}/mo).
+            </div>
+          )}
           {decision.verdict === "buy-later" && monthsToSave && (
             <div className="mrc-canibuy-wait-note">
               ⏱️ Buy outright around <strong>{waitUntil}</strong> at your current pace ({formatMoney(decision.monthlyFreeCash)}/mo free cash flow).

@@ -191,8 +191,11 @@ export default function BackupModal({ isOpen, onClose, onDataImported }) {
 
         <div className="mrc-modal-body">
           <p className="mrc-backup-desc">
-            Your data is stored 100% locally in your browser. Export backups to save your records, or import JSON files across your devices.
+            Your data is stored 100% locally in your browser. Export backups regularly to safeguard your records across devices.
           </p>
+          <div style={{ fontSize: '0.8rem', padding: '6px 10px', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--mrc-accent, #2563eb)', borderRadius: 6, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+            🛡️ <span>Tip: Regular JSON exports ensure your data stays safe even if browser cache is cleared.</span>
+          </div>
 
           <div className="mrc-backup-actions-grid">
             <div className="mrc-backup-card">

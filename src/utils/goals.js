@@ -1,4 +1,8 @@
+import { projectFireMonths, formatFireYears } from './fireProjection.js';
+import { formatMoney } from './formatters.js';
+
 const GOALS_STORAGE_KEY = 'rupeerules_goals_v1';
+
 
 export const DEFAULT_GOALS_DATA = {
   houseAppreciationRate: 3,
@@ -179,6 +183,24 @@ export function computeGoalStatuses(goalsData, actuals, breakdownItems, salary, 
   const g8Done = totalAssets >= 10000000;
   const g8Progress = Math.min(totalAssets / 10000000, 1);
 
+  // G8 Projection using Rule 5 monthly investment + 12% CAGR
+  const rule5Item = breakdownItems[5] || [];
+  const monthlyInvestmentRule5 = Number(actuals[5]) || 0;
+  let g8ProjectionText = null;
+  if (!g8Done && totalAssets < 10000000 && monthlyInvestmentRule5 > 0) {
+    const monthsNeeded = projectFireMonths({
+      target: 10000000,
+      corpus: totalAssets,
+      monthlyInvestment: monthlyInvestmentRule5,
+      annualReturn: 0.12
+    });
+    const label = formatFireYears(monthsNeeded);
+    if (label) {
+      g8ProjectionText = `At ${formatMoney(monthlyInvestmentRule5)}/mo investment (Rule 5) & ~12% CAGR, estimated ${label} to reach ₹1Cr.`;
+    }
+  }
+
+
   // G9: ₹10Cr Dream Milestone Net Worth
   const g9Done = netWorth >= 100000000;
   const g9Progress = Math.min(Math.max(netWorth, 0) / 100000000, 1);
@@ -229,7 +251,8 @@ export function computeGoalStatuses(goalsData, actuals, breakdownItems, salary, 
       totalHouseEmi,
       totalAssets,
       netWorth,
-      avgEmergencyExpense
+      avgEmergencyExpense,
+      g8ProjectionText
     }
   };
 }

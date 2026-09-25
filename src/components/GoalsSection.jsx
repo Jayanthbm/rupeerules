@@ -376,6 +376,11 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
         <div>
           <div>Includes Emergency Fund + FIRE Corpus + Current House Values</div>
           <div>Total Assets: <strong>{formatMoney(metrics.totalAssets)}</strong> / {formatMoney(10000000)}</div>
+          {metrics.g8ProjectionText && (
+            <div style={{ fontSize: '0.8rem', color: 'var(--mrc-accent, #2563eb)', marginTop: 6, fontWeight: 500 }}>
+              ⏱️ {metrics.g8ProjectionText}
+            </div>
+          )}
         </div>
       ),
       nudge: 'Maintain compounding across real estate and market investments'
@@ -421,13 +426,6 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
             <h2>🎯 Financial Goals</h2>
             <p className="goals-subtitle">Track key wealth milestones and life goals</p>
           </div>
-          <button
-            type="button"
-            className="goals-back-btn"
-            onClick={onNavigateToCalculator}
-          >
-            ← Back to Calculator
-          </button>
         </div>
 
         <div className="goals-progress-overview">
