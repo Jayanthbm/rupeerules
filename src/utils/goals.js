@@ -188,7 +188,6 @@ export function computeGoalStatuses(goalsData, actuals, breakdownItems, salary, 
   const g8Progress = Math.min(totalAssets / 10000000, 1);
 
   // G8 Projection using Rule 5 monthly investment + 12% CAGR
-  const rule5Item = breakdownItems[5] || [];
   const monthlyInvestmentRule5 = Number(actuals[5]) || 0;
   let g8ProjectionText = null;
   if (!g8Done && totalAssets < 10000000 && monthlyInvestmentRule5 > 0) {

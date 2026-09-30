@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { formatMoney } from '../utils/formatters.js';
 import {
   loadGoalsData,
@@ -30,15 +30,11 @@ export default function GoalsSection({ salary, actuals, breakdownItems, storeMon
     metrics
   } = computeGoalStatuses(goalsData, actuals, breakdownItems, salary, storeMonths);
 
-  // Sync auto-detected achievements back to goalsData state if changed
-  useEffect(() => {
-    if (achievementsChanged) {
-      setGoalsData(prev => ({
-        ...prev,
-        achieved
-      }));
-    }
-  }, [achievementsChanged, achieved]);
+  // Sync auto-detected achievements back to goalsData state — done during render with a guard
+  // (React re-renders immediately without committing; no effect, no cascading render).
+  if (achievementsChanged) {
+    setGoalsData(prev => (prev.achieved === achieved ? prev : { ...prev, achieved }));
+  }
 
   // Handler helpers for nested state updates
   const updateField = (path, value) => {
