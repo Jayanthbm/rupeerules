@@ -39,6 +39,8 @@ export default function MoneyRulesCalculator() {
     breakdownItems,
     actuals,
     salary,
+    isLocked,
+    toggleMonthLock,
   } = useMoneyRules();
 
   return (
@@ -82,6 +84,8 @@ export default function MoneyRulesCalculator() {
             onSwitchMonth={switchMonth}
             onCopyPrevious={copyFromMonth}
             months={store.months}
+            isLocked={isLocked}
+            onToggleLock={toggleMonthLock}
           />
 
           <SalaryInput
@@ -90,6 +94,7 @@ export default function MoneyRulesCalculator() {
             onSalaryChange={handleSalaryChange}
             onSalaryCommit={handleSalaryCommit}
             rulesWithAmounts={rulesWithAmounts}
+            isLocked={isLocked}
           />
 
           {salaryTransition === 0 ? (
@@ -107,6 +112,7 @@ export default function MoneyRulesCalculator() {
               onRemoveBreakdownItem={removeBreakdownItem}
               onSortBreakdownItems={sortBreakdownItems}
               onClearAll={handleClearAll}
+              isLocked={isLocked}
             />
           )}
         </>

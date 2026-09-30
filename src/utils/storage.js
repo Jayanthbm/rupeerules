@@ -18,6 +18,20 @@ export function formatMonthLabel(monthKey) {
   return date.toLocaleString("en-IN", { month: "short", year: "numeric" });
 }
 
+/** Determine if a month is locked by default based on salary and month key */
+export function isMonthDefaultLocked(monthKey, monthData) {
+  const salary = Number(monthData?.salary) || 0;
+  if (salary === 0) return false;
+
+  if (typeof monthData?.isLocked === "boolean") {
+    return monthData.isLocked;
+  }
+
+  const currentKey = getCurrentMonthKey();
+  return monthKey < currentKey;
+}
+
+
 /** Clean up empty values in actuals map */
 export function cleanActuals(actuals) {
   if (!actuals || typeof actuals !== "object") return {};

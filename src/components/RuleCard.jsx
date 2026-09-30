@@ -14,6 +14,7 @@ export default function RuleCard({
   onAddBreakdownItem,
   onRemoveBreakdownItem,
   onSortBreakdownItems,
+  isLocked = false,
 }) {
   const hasBreakdownOption = Boolean(rule.defaultItems);
   const isAlwaysBreakdown = Boolean(rule.alwaysBreakdown);
@@ -181,7 +182,7 @@ export default function RuleCard({
                           className="mrc-breakdown-name-input"
                           value={subItem.name}
                           placeholder="Asset item (e.g. Mutual Funds)"
-                          disabled={isLinkedItem || subItem.isFixed}
+                          disabled={isLocked || isLinkedItem || subItem.isFixed}
                           onChange={(e) => onUpdateBreakdownItem(rule.id, subItem.id, "name", e.target.value)}
                           onBlur={handleAmountBlur}
                         />
@@ -198,13 +199,13 @@ export default function RuleCard({
                             className="mrc-breakdown-amount-input"
                             value={subItem.amount === "" ? "" : String(subItem.amount)}
                             placeholder="0"
-                            disabled={isLinkedItem}
+                            disabled={isLocked || isLinkedItem}
                             title={isLinkedItem ? "Auto-synced from Emergency Fund rule" : ""}
                             onChange={(e) => onUpdateBreakdownItem(rule.id, subItem.id, "amount", e.target.value)}
                             onBlur={handleAmountBlur}
                           />
                         </div>
-                        {!isLinkedItem && !subItem.isFixed && (
+                        {!isLinkedItem && !subItem.isFixed && !isLocked && (
                           <button
                             type="button"
                             className="mrc-breakdown-del-btn"
@@ -221,13 +222,15 @@ export default function RuleCard({
                 </div>
 
                 <div className="mrc-breakdown-footer">
-                  <button
-                    type="button"
-                    className="mrc-breakdown-add-btn"
-                    onClick={() => onAddBreakdownItem(rule.id)}
-                  >
-                    + Add item
-                  </button>
+                  {!isLocked && (
+                    <button
+                      type="button"
+                      className="mrc-breakdown-add-btn"
+                      onClick={() => onAddBreakdownItem(rule.id)}
+                    >
+                      + Add item
+                    </button>
+                  )}
 
                   <div className="mrc-breakdown-total">
                     <span>Subtotal:</span>
@@ -251,6 +254,7 @@ export default function RuleCard({
                 type="text"
                 inputMode="decimal"
                 value={item.actualRaw === "" ? "" : String(item.actualRaw)}
+                disabled={isLocked}
                 onChange={(e) => onActualChange(rule.id, e.target.value)}
                 placeholder="0"
                 aria-label={`Actual ${rule.title}`}

@@ -9,11 +9,13 @@ import {
   clearSavedState,
   cleanActuals,
   cleanBreakdownItems,
+  isMonthDefaultLocked,
 } from "../utils/storage";
 
 /* ---------------------------------------------------------------
    Pure helpers
    --------------------------------------------------------------- */
+
 
 function sortItemList(list) {
   if (!Array.isArray(list) || list.length <= 1) return list;
@@ -129,6 +131,7 @@ const ACTIONS = {
   SORT_ITEMS: "SORT_ITEMS",
   RELOAD: "RELOAD",
   CLEAR_ALL: "CLEAR_ALL",
+  TOGGLE_MONTH_LOCK: "TOGGLE_MONTH_LOCK",
 };
 
 function reducer(state, action) {
@@ -276,6 +279,33 @@ function reducer(state, action) {
         salary,
         actuals: data.actuals || {},
         breakdownItems: sortAllBreakdownItems(items),
+      };
+    }
+
+    case ACTIONS.TOGGLE_MONTH_LOCK: {
+      const activeM = state.store.activeMonth || getCurrentMonthKey();
+      const currentMonthData = state.store.months?.[activeM] || {};
+      const currentlyLocked = isMonthDefaultLocked(activeM, currentMonthData);
+      const newLockedState = !currentlyLocked;
+
+      const updatedMonths = {
+        ...(state.store.months || {}),
+        [activeM]: {
+          ...currentMonthData,
+          isLocked: newLockedState,
+          updatedAt: Date.now(),
+        },
+      };
+
+      const newStore = {
+        ...(state.store || {}),
+        months: updatedMonths,
+      };
+
+      saveAllData(newStore);
+      return {
+        ...state,
+        store: newStore,
       };
     }
 
@@ -540,6 +570,13 @@ export function useMoneyRules() {
     return map;
   }, [rulesWithAmounts]);
 
+  const activeMonthData = store.months?.[activeMonth] || {};
+  const isLocked = isMonthDefaultLocked(activeMonth, activeMonthData);
+
+  const toggleMonthLock = useCallback(() => {
+    dispatch({ type: ACTIONS.TOGGLE_MONTH_LOCK });
+  }, []);
+
   return {
     store,
     activeMonth,
@@ -548,6 +585,8 @@ export function useMoneyRules() {
     salaryTransition,
     actuals,
     breakdownItems,
+    isLocked,
+    toggleMonthLock,
     activeTab,
     setActiveTab,
     switchMonth,

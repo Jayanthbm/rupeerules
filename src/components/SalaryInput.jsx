@@ -7,6 +7,7 @@ export default function SalaryInput({
   onSalaryChange,
   onSalaryCommit,
   rulesWithAmounts,
+  isLocked = false,
 }) {
   return (
     <section className="mrc-input-section">
@@ -20,6 +21,7 @@ export default function SalaryInput({
           type="text"
           inputMode="decimal"
           value={monthlySalary}
+          disabled={isLocked}
           onChange={(e) => onSalaryChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -30,7 +32,7 @@ export default function SalaryInput({
           placeholder="e.g. 50000"
           aria-label="Monthly take-home salary"
         />
-        {monthlySalary.trim().length > 0 && (
+        {monthlySalary.trim().length > 0 && !isLocked && (
           <button
             className="mrc-calculate-btn"
             onClick={onSalaryCommit}

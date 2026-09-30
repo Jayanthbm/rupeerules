@@ -14,6 +14,7 @@ export default function RulesTabSection({
   onRemoveBreakdownItem,
   onSortBreakdownItems,
   onClearAll,
+  isLocked = false,
 }) {
   return (
     <div className="mrc-rules">
@@ -55,6 +56,7 @@ export default function RulesTabSection({
                   onAddBreakdownItem={onAddBreakdownItem}
                   onRemoveBreakdownItem={onRemoveBreakdownItem}
                   onSortBreakdownItems={onSortBreakdownItems}
+                  isLocked={isLocked}
                 />
               );
             })}
@@ -80,6 +82,7 @@ export default function RulesTabSection({
                   onAddBreakdownItem={onAddBreakdownItem}
                   onRemoveBreakdownItem={onRemoveBreakdownItem}
                   onSortBreakdownItems={onSortBreakdownItems}
+                  isLocked={isLocked}
                 />
               );
             })}
@@ -92,12 +95,14 @@ export default function RulesTabSection({
         against each rule to see how you're tracking.
       </p>
 
-      <button className="mrc-clear-btn" onClick={onClearAll}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
-          <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z" />
-        </svg>
-        Clear all data
-      </button>
+      {!isLocked && (
+        <button className="mrc-clear-btn" onClick={onClearAll}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+            <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z" />
+          </svg>
+          Clear all data
+        </button>
+      )}
     </div>
   );
 }
