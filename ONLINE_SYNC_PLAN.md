@@ -20,9 +20,7 @@
 11. [Files to Touch](#11-files-to-touch)
 12. [Testing Plan](#12-testing-plan)
 13. [Security & Privacy](#13-security--privacy)
-14. [Alternatives Considered](#14-alternatives-considered)
-15. [Open Questions](#15-open-questions)
-
+             
 ---
 
 ## 1. Executive Summary
@@ -156,14 +154,14 @@ Every reducer path ends in a `saveAllData(store)` call — this is the **single 
 
 ### 4.3 The two config values
 
-The user provides (from Supabase → Project Settings → API):
+The user provides (from Supabase → Project Settings → API keys):
 
 | Value | Visible to app users? | Purpose |
 |---|---|---|
 | **Project URL** (`https://xyz.supabase.co`) | Yes | API endpoint |
-| **anon / public key** | Yes | Public client key — identifies the project, grants **no** data access without an authenticated session (RLS enforces this) |
+| **Publishable Key** (or legacy **anon key**) | Yes | Public browser key — safe to expose in client code when Row Level Security (RLS) is enabled |
 
-Neither is a secret in the traditional sense — they ship inside a static bundle and are designed to be public. The **service_role key must never** be used in the app or pasted into it (§13).
+Neither is a secret in the traditional sense — they ship inside a static bundle and are designed to be public. The **Secret key** (or legacy `service_role` key) **must never** be used in the app or pasted into it (§13).
 
 App-side env-var names (for the owner's own build, or for hardcoding defaults): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`. The runtime settings screen overrides env defaults, since BYO users won't rebuild the app.
 
@@ -182,21 +180,27 @@ The doc this section will become in-product (the "guided setup panel" content). 
 2. Enter **email + password**. Mark it as email-confirmed.
 3. This is the account you'll log into RupeeRules with. (Optionally disable public sign-ups entirely: Authentication → Providers → Email → turn off "Allow new users to sign up".)
 
-### Step 3 — Create the tables (one-time, ~30 seconds)
+### Step 3 — Create the tables (one-time copy-paste or automated in-app guided flow)
 1. Dashboard → **SQL Editor → New query**.
 2. Paste the SQL script from §6.3 and **Run**. It creates the tables, indexes, RLS policies, and enables realtime. It is **idempotent** (safe to run twice).
 
 ### Step 4 — Copy the config into the app
-1. Dashboard → **Project Settings → API**.
-2. Copy **Project URL** and **anon public** key.
-3. In RupeeRules: **Settings → Cloud Sync → Configure**, paste both, **Save**.
+1. Dashboard → **Project Settings → API keys**.
+2. Copy **Project URL** and **Publishable key** (or legacy **anon public** key).
+3. In RupeeRules: **Header → ☁️ Sync → Section 1: Supabase Configuration**, paste both, **Save**.
 
-### Step 5 — Log in and first sync
-1. In the same panel: **Log in** with the email/password from Step 2.
-2. The app verifies the schema (probe query). If tables are missing, the guided panel shows Step 3's SQL.
-3. First pull/push merge runs (§9.1). Status pill shows **Synced**.
+### Step 5 — Automated Table Existence Check & On-Screen Guidance
+1. Upon entering Supabase credentials and logging in, the app automatically executes a lightweight **Schema Probe Query** (`select 1 from public.rupee_rules_monthly_records limit 1`).
+2. **If tables exist**: The status badge immediately changes to 🟢 **Synced / Connected** and performs initial sync.
+3. **If tables are missing (e.g. fresh Supabase project)**:
+   - The screen dynamically highlights an **On-Screen Instructions Banner**: *"Supabase Connected, but Tables Not Found"*.
+   - Displays a one-click **"📋 Copy Setup SQL Script"** button containing the complete, pre-formatted idempotent SQL script (§6.3).
+   - Provides clear numbered on-screen instructions:
+     1. Open your [Supabase Dashboard → SQL Editor](https://supabase.com/dashboard).
+     2. Click **New Query**, paste the copied SQL script, and click **Run**.
+     3. Return here and click **"🔄 Re-verify Tables"**.
 
-> **Why can't the app create the DB automatically?** Creating tables requires privileged DDL. Exposing an admin/service key inside a public static app would let *anyone* run DDL against the user's database — a serious security hole. A one-time copy-paste SQL script is the standard, safe pattern for BYO Supabase apps (used widely because it keeps the anon key the only credential in the client). The guided panel with copy-to-clipboard SQL makes this painless.
+> **Why can't the app create the DB automatically?** Creating tables requires privileged DDL (`CREATE TABLE`). Exposing an admin/service key inside a public static app would let *anyone* run DDL against the user's database — a serious security hole. A lightweight probe query + on-screen copy-paste SQL script + "Re-verify" button is the safest and easiest pattern for BYO Supabase apps.
 
 ---
 
@@ -214,13 +218,13 @@ The doc this section will become in-product (the "guided setup panel" content). 
 ### 6.2 Tables
 
 ```
-sync_profile
+rupee_rules_sync_profile
   user_id        uuid      PK  (== auth.users.id)
   schema_version int       NOT NULL DEFAULT 1
   cleared_at     timestamptz                   -- last Clear All marker (nullable)
   updated_at     timestamptz NOT NULL DEFAULT now()
 
-monthly_records
+rupee_rules_monthly_records
   user_id        uuid      NOT NULL            -- owner (RLS scope)
   month_key      text      NOT NULL            -- "YYYY-MM"
   salary         numeric   NOT NULL DEFAULT 0
@@ -232,7 +236,7 @@ monthly_records
   updated_at     timestamptz NOT NULL DEFAULT now()
   PK (user_id, month_key)
 
-goals
+rupee_rules_goals
   user_id        uuid      PK
   data           jsonb     NOT NULL
   client_updated_at  bigint    NOT NULL
@@ -240,7 +244,7 @@ goals
   updated_at     timestamptz NOT NULL DEFAULT now()
 ```
 
-Index: `monthly_records (user_id, month_key)` is the PK — also the access pattern. No further indexes needed at this scale.
+Index: `rupee_rules_monthly_records (user_id, month_key)` is the PK — also the access pattern. No further indexes needed at this scale.
 
 ### 6.3 Setup SQL (copy-paste script)
 
@@ -249,14 +253,14 @@ Index: `monthly_records (user_id, month_key)` is the PK — also the access patt
 -- Run once in Supabase → SQL Editor.
 
 -- 1) Tables -------------------------------------------------------------
-create table if not exists public.sync_profile (
+create table if not exists public.rupee_rules_sync_profile (
   user_id         uuid primary key references auth.users(id) on delete cascade,
   schema_version  int not null default 1,
   cleared_at      timestamptz,
   updated_at      timestamptz not null default now()
 );
 
-create table if not exists public.monthly_records (
+create table if not exists public.rupee_rules_monthly_records (
   user_id           uuid not null references auth.users(id) on delete cascade,
   month_key         text not null,
   salary            numeric not null default 0,
@@ -269,7 +273,7 @@ create table if not exists public.monthly_records (
   primary key (user_id, month_key)
 );
 
-create table if not exists public.goals (
+create table if not exists public.rupee_rules_goals (
   user_id           uuid primary key references auth.users(id) on delete cascade,
   data              jsonb not null,
   client_updated_at bigint not null,
@@ -278,39 +282,39 @@ create table if not exists public.goals (
 );
 
 -- 2) Row Level Security -------------------------------------------------
-alter table public.sync_profile    enable row level security;
-alter table public.monthly_records enable row level security;
-alter table public.goals           enable row level security;
+alter table public.rupee_rules_sync_profile    enable row level security;
+alter table public.rupee_rules_monthly_records enable row level security;
+alter table public.rupee_rules_goals           enable row level security;
 
 -- Owner-only access: a logged-in user may touch only their own rows.
 -- (Anon/unauthenticated requests match no policy and see nothing.)
-create policy "own profile select" on public.sync_profile
+create policy "own profile select" on public.rupee_rules_sync_profile
   for select using (auth.uid() = user_id);
-create policy "own profile upsert" on public.sync_profile
+create policy "own profile upsert" on public.rupee_rules_sync_profile
   for insert with check (auth.uid() = user_id);
-create policy "own profile update" on public.sync_profile
+create policy "own profile update" on public.rupee_rules_sync_profile
   for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
-create policy "own months select" on public.monthly_records
+create policy "own months select" on public.rupee_rules_monthly_records
   for select using (auth.uid() = user_id);
-create policy "own months insert" on public.monthly_records
+create policy "own months insert" on public.rupee_rules_monthly_records
   for insert with check (auth.uid() = user_id);
-create policy "own months update" on public.monthly_records
+create policy "own months update" on public.rupee_rules_monthly_records
   for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "own months delete" on public.monthly_records
+create policy "own months delete" on public.rupee_rules_monthly_records
   for delete using (auth.uid() = user_id);
 
-create policy "own goals select" on public.goals
+create policy "own goals select" on public.rupee_rules_goals
   for select using (auth.uid() = user_id);
-create policy "own goals upsert" on public.goals
+create policy "own goals upsert" on public.rupee_rules_goals
   for insert with check (auth.uid() = user_id);
-create policy "own goals update" on public.goals
+create policy "own goals update" on public.rupee_rules_goals
   for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- 3) Realtime -----------------------------------------------------------
-alter publication supabase_realtime add table public.monthly_records;
-alter publication supabase_realtime add table public.goals;
-alter publication supabase_realtime add table public.sync_profile;
+alter publication supabase_realtime add table public.rupee_rules_monthly_records;
+alter publication supabase_realtime add table public.rupee_rules_goals;
+alter publication supabase_realtime add table public.rupee_rules_sync_profile;
 
 -- 4) Keep updated_at fresh ---------------------------------------------
 create or replace function public.touch_updated_at()
@@ -320,12 +324,12 @@ begin
   return new;
 end $$;
 
-drop trigger if exists trg_monthly_touch on public.monthly_records;
-create trigger trg_monthly_touch before update on public.monthly_records
+drop trigger if exists trg_monthly_touch on public.rupee_rules_monthly_records;
+create trigger trg_monthly_touch before update on public.rupee_rules_monthly_records
   for each row execute function public.touch_updated_at();
 
-drop trigger if exists trg_goals_touch on public.goals;
-create trigger trg_goals_touch before update on public.goals
+drop trigger if exists trg_goals_touch on public.rupee_rules_goals;
+create trigger trg_goals_touch before update on public.rupee_rules_goals
   for each row execute function public.touch_updated_at();
 ```
 
@@ -333,7 +337,7 @@ create trigger trg_goals_touch before update on public.goals
 
 ### 6.4 Mapping app ⇄ DB
 
-| App (`store.months["2026-09"]`) | `monthly_records` row |
+| App (`store.months["2026-09"]`) | `rupee_rules_monthly_records` row |
 |---|---|
 | `salary` | `salary` |
 | `actuals` (map ruleId→number) | `actuals` (jsonb, identical shape) |
@@ -343,7 +347,7 @@ create trigger trg_goals_touch before update on public.goals
 | — (device-local) | `created_at` / `updated_at` (server metadata only) |
 | `store.activeMonth` | **not synced** (device-local UI state) |
 
-`loadGoalsData()` output ⇄ `goals.data` (jsonb, identical shape). `goals.achieved` travels inside `data`.
+`loadGoalsData()` output ⇄ `rupee_rules_goals.data` (jsonb, identical shape). `goals.achieved` travels inside `data`.
 
 ---
 
@@ -388,11 +392,11 @@ create trigger trg_goals_touch before update on public.goals
 PULL   →  MERGE  →  APPLY LOCAL  →  PUSH DIRTY
 ```
 
-1. **Pull:** `select * from monthly_records where user_id = auth.uid()` (+ `goals`, + `sync_profile`). Tiny result set (one row per tracked month); fine to fetch whole-set each time — pagination unnecessary at this scale.
+1. **Pull:** `select * from rupee_rules_monthly_records where user_id = auth.uid()` (+ `rupee_rules_goals`, + `rupee_rules_sync_profile`). Tiny result set (one row per tracked month); fine to fetch whole-set each time — pagination unnecessary at this scale.
 2. **Merge (per month key):**
    - Cloud only → insert into local store.
    - Local only → mark dirty, push.
-   - Both → compare `client_updated_at`: newer wins; equal → local wins (deterministic tie-break).
+   - Both → compare timestamps (`updated_at` server timestamp / client ISO timestamp): newer wins; equal → local wins (deterministic tie-break).
    - Same for the goals row.
 3. **Apply local:** dispatch `RELOAD` with the merged store (the reducer already supports full-state replacement), update `syncedAt`.
 4. **Push dirty:** `upsert` changed month rows and the goals row (upsert avoids read-before-write races).
@@ -401,14 +405,14 @@ PULL   →  MERGE  →  APPLY LOCAL  →  PUSH DIRTY
 
 Scenario: phone has 24 months, laptop has 6 overlapping + 3 new months.
 
-- **Rule:** union of months. For keys present on both sides, **newer `client_updated_at` wins per month** (not per field).
+- **Rule:** union of months. For keys present on both sides, **newer timestamp wins per month** (not per field).
 - **Snapshot safety:** before applying a merge that changes more than N rows (say > 5) or when conflicts are detected, capture `exportBackupJSON()` into an in-memory restore point and offer "Download pre-sync backup" in the sync panel. Cheap insurance, aligns with the existing backup feature.
 - **UI:** a one-time "Merging your data…" state with a summary ("24 months from cloud, 3 newer from this device").
 
 ### 8.4 Realtime (live multi-device)
 
-- On login, subscribe to changes on `monthly_records` / `goals` / `sync_profile` filtered to the user.
-- On event: fetch that row (or re-pull whole set — it's tiny) → merge (same LWW rule) → apply locally. Ignore echo events for rows this device just pushed (compare `client_updated_at` + a pushed-hash cache).
+- On login, subscribe to changes on `rupee_rules_monthly_records` / `rupee_rules_goals` / `rupee_rules_sync_profile` filtered to the user.
+- On event: fetch that row → merge (same LWW rule comparing remote `updated_at` with local `updatedAt`) → apply locally if remote is newer. Echo events from this device's own pushes are naturally ignored because local state is already up to date.
 - If realtime disconnects, the engine degrades gracefully: periodic pull on focus keeps devices converging within seconds-to-minutes instead of instantly.
 
 ### 8.5 Offline queue
@@ -419,7 +423,7 @@ Scenario: phone has 24 months, laptop has 6 overlapping + 3 new months.
 
 ### 8.6 What is *not* synced (v1)
 
-- `activeMonth` (device UI state), `mrc_darkmode` (device preference), `mrc_canibuy_state_v1` (draft — see OQ-6), legacy `mrc_state_v1`.
+- `activeMonth` (device UI state), `mrc_darkmode` (device preference), `mrc_canibuy_state_v1` (draft), legacy `mrc_state_v1`.
 
 ---
 
@@ -433,7 +437,7 @@ Scenario: phone has 24 months, laptop has 6 overlapping + 3 new months.
 | Two devices edit the **same month** while both online | Realtime pull applies the remote row; the local device's next keystroke re-writes the whole row with a fresh `updatedAt`. Last keystroke wins. Acceptable for a single-user app. |
 | Same month edited on **two devices while offline** | Whole-row LWW on next sync; the loser's changes are replaced. Risk noted in §9.2; pre-sync backup (§8.3) mitigates data loss. |
 | **Goals** edited on two devices | Whole-object LWW (single row). |
-| Clock skew between devices | `client_updated_at` is client-clock based. Skew only matters when two devices edit the *same* month within the skew window. Mitigation if it ever bites: use server `updated_at` as tie-breaker, or switch the LWW key to server time (OQ-4). |
+| Clock skew between devices | Using server `updated_at` (stamped by DB trigger `touch_updated_at`) ensures reliable order independent of local device clock skew. |
 
 ### 9.2 The whole-row LWW trade-off (explicitly accepted for v1)
 
@@ -447,13 +451,14 @@ Because a month is one row, concurrent edits to *different rules in the same mon
 
 `importBackupJSON` replaces the whole local store today. Under sync it should additionally **mark all imported months dirty** so they push; a confirmation line in the modal ("This will also sync to cloud") keeps expectations clear. Export needs no change (it reads local state).
 
-### 9.4 `CLEAR_ALL`
+### 9.4 `CLEAR_ALL` & Resets
 
-Options:
+The app will offer two distinct options in Settings:
 
-- **A. Propagate the wipe (recommended):** write `cleared_at = now()` to `sync_profile`, delete cloud rows; other devices pull `cleared_at` and clear locally (once, tracked by their own last-seen `cleared_at`). Matches user intent of "Clear All".
-- **B. Local-only wipe:** cloud restores everything on next pull — surprising and data-lossy *in the other direction*.
-- Choose A; the `sync_profile.cleared_at` marker makes it deterministic across devices. (Double-check intent in the confirm dialog: "Clears data on all synced devices.")
+1. **Local Clear All**: Wipes `localStorage` on the current device only. Keeps cloud DB untouched. (Useful for re-downloading cloud state on device or testing).
+2. **Clear DB + Local Storage**: Deletes all rows in `rupee_rules_monthly_records` and `rupee_rules_goals` for the logged-in user in Supabase, updates `rupee_rules_sync_profile.cleared_at = now()`, and wipes `localStorage`. Other synced devices pull `cleared_at` on their next sync and automatically wipe local state as well.
+
+Confirmation modals explicitly distinguish between these two actions to prevent accidental cloud wipes.
 
 ### 9.5 Account/data resets on the Supabase side
 
@@ -465,34 +470,48 @@ The SW caches app shell assets only; API calls bypass it (no cache-first for Sup
 
 ---
 
-## 10. Implementation Phases
+### 10.1 UI & Component Architecture (Where Creds & Login Live)
+
+1. **Header Entry Point (`Header.jsx`)**:
+   - Add a Cloud Sync tab button (`☁️ Sync`) in the header navigation alongside `Reports`, `Goals`, and `Can I buy?`.
+   - Includes a visual status badge (e.g. green dot = Synced 🟢, orange dot = Syncing 🟠, gray dot = Disconnected ⚪).
+
+2. **Dedicated Full-Page View (`SyncPage.jsx` / `SyncSection.jsx`)**:
+   - Clicking `☁️ Sync` switches `currentView` to `"sync"` (full responsive view, matching `ReportsPage` / `GoalsSection` layout — **no popup modals**, ensuring maximum mobile keyboard & screen visibility).
+   - Structured into clean, mobile-optimized sections:
+     - **Section 1: Supabase Credentials**: Inputs for **Project URL** (`https://xyz.supabase.co`) and **anon / public key**. Allows saving or updating credentials locally. Can also be pre-filled automatically if `.env` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) is provided at build time.
+     - **Section 2: User Login**: Clean, full-width Email & Password form calling `supabase.auth.signInWithPassword()`. Shows logged-in user email, session status, and a **Sign Out** button when active.
+     - **Section 3: Database Status & Setup Guide**: Lightweight health probe checks if `rupee_rules_monthly_records` exists. If missing, presents a copy-paste SQL snippet button and step-by-step instructions.
+
+---
+
+## 10.2 Implementation Phases
 
 Each phase is independently shippable and testable.
 
-**Phase 0 — Persistence seams (refactor, no behavior change)**
-- Extract a thin `storePersistence` wrapper around `saveAllData`/`loadAllData`/goals save so the sync layer can observe writes without touching the reducer (or simply register a post-save callback in the existing call sites — 4 call sites total).
-- Add `rupeerules_sync_state_v1` (config, session snapshot refs, dirty set, `cleared_at` cursor).
+**Phase 0 — Storage Seams & Dependency Setup**
+- Install `@supabase/supabase-js`.
+- Add local storage keys for sync state (`rupeerules_sync_state_v1`: credentials, session token ref, dirty keys queue).
+- Extract thin persistence wrapper in `src/utils/sync/storePersistence.js` to observe writes from `saveAllData` and `saveGoalsData`.
 
-**Phase 1 — Config & auth UI**
-- `SyncSection` (settings screen or modal): config form (URL + anon key, validation via a harmless `GET /auth/v1/health` probe), login form, status pill, sign out / disconnect.
-- Supabase client factory reading config from `rupeerules_sync_state_v1` (fallback: `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`).
-- Dep: `@supabase/supabase-js`.
+**Phase 1 — UI & Supabase Connection (`SyncSection.jsx` & `Header.jsx`)**
+- Create `supabaseClient.js` factory (loads from `localStorage` config or `.env`).
+- Build `Header.jsx` cloud sync button with live status badge.
+- Build `SyncSection.jsx` with Supabase Credential Input Form + Email/Password Login Form + Logout & Disconnect buttons.
 
-**Phase 2 — Schema bootstrap**
-- Post-login probe (e.g., `select from monthly_records limit 1`; map PostgREST errors: `42P01` = missing table).
-- Guided panel (§5) with copy-to-clipboard SQL when missing.
+**Phase 2 — Schema Validation & Guided Setup**
+- Implement Post-login schema probe (`select 1 from rupee_rules_monthly_records limit 1`).
+- Display copy-paste SQL setup banner if tables are not found in the project.
 
-**Phase 3 — Pull / merge / push engine**
-- Implement §8.2/§8.3 with unit-tested pure merge functions (`syncMerge.js`).
-- Wire post-save hook → dirty set → debounced push.
-- First-login backup snapshot offer.
+**Phase 3 — Core Sync Engine (Pull / LWW Merge / Push)**
+- Create `src/utils/sync/syncMerge.js` with pure LWW merge functions (newer `updated_at` wins per month).
+- Implement initial pull & union-merge on login (with automatic local backup creation prior to large merges).
+- Implement dirty queue & debounced background push (~1.5s after edit).
 
-**Phase 4 — Realtime + polish**
-- Realtime subscriptions, echo suppression, focus-refetch, retry/backoff, status pill states, "Sync now".
-- `CLEAR_ALL` propagation via `sync_profile.cleared_at`.
-
-**Phase 5 — Hardening (can follow later)**
-- Field-level merge for `actuals`/`items` (§9.2 option a), server-clock LWW key, multi-account support, sync audit log.
+**Phase 4 — Realtime & Multi-Device Convergence**
+- Subscribe to Supabase Realtime channels on `rupee_rules_monthly_records`, `rupee_rules_goals`, and `rupee_rules_sync_profile`.
+- Implement focus-refetch (`visibilitychange`), backoff retry for network errors, manual "Sync Now" button.
+- Support dual Clear All options (Local-only vs. Cloud DB + Local).
 
 ---
 
@@ -506,13 +525,13 @@ Each phase is independently shippable and testable.
 | `src/utils/sync/syncMerge.test.js` | NEW — merge engine tests |
 | `src/components/SyncSection.jsx` | NEW — config + login + status UI |
 | `src/styles/sync.css` | NEW — styles |
-| `src/components/Header.jsx` | Add ⚙️/☁️ Sync nav entry (4th icon next to Reports/Backup/Can-I-Buy) |
-| `src/MoneyRulesCalculator.jsx` | Mount SyncSection; pass status down |
+| `src/components/Header.jsx` | Add ☁️ Cloud Sync nav entry (next to Reports/Goals/Can-I-Buy) with live status dot |
+| `src/MoneyRulesCalculator.jsx` | Add `'sync'` to `currentView` router; render `SyncPage` |
 | `src/hooks/useMoneyRules.js` | Register post-save hook; handle `RELOAD` from sync; `CLEAR_ALL` hook |
 | `src/components/GoalsSection.jsx` | Post-save hook for goals dirty marking |
 | `src/utils/storage.js` | `importBackupJSON` marks months dirty when sync active |
-| `package.json` | `@supabase/supabase-js` dependency |
-| `README.md` | Document the feature + owner setup guide |
+| `package.json` | Add `@supabase/supabase-js` dependency |
+| `README.md` | Document feature + owner setup guide |
 
 ---
 
@@ -544,33 +563,4 @@ Each phase is independently shippable and testable.
 
 ---
 
-## 14. Alternatives Considered
-
-| Option | Free tier | Auth | Realtime | Fit for this app | Verdict |
-|---|---|---|---|---|---|
-| **Supabase (BYO)** ✅ | ~500 MB DB, ~5 GB egress, ~50k MAU (verify current) | ✅ Email/password + dashboard user creation, refresh tokens auto-managed | ✅ Built-in | SQL+JSONB matches month rows; RLS gives per-user isolation with zero server code; static-host friendly | **Recommended** |
-| **Firebase (Firestore)** | Generous Spark tier | ✅ (incl. email/password) | ✅ | Solid; but document-DB model fits worse, Google account required, lock-in stronger, security rules harder to audit than SQL RLS | Good runner-up |
-| **PocketBase** (self-host) | Free forever (single binary) | ✅ | ✅ | Lovely DX, but **needs a always-on server** the user must run — contradicts "no backend" simplicity for a BYO audience | Only if self-hosting is acceptable |
-| **Turso / libSQL** | Free tier | ❌ DIY | ❌ | Would require building auth+tokens+realtime from scratch | Rejected (too much glue) |
-| **CloudKit JS** | Free (Apple) | Apple ID only | ✅ | Excludes non-Apple devices | Rejected |
-| **Dexie Cloud** | Small free tier | ✅ | ✅ | Syncs IndexedDB — elegant, but the app's storage is localStorage, and the free tier is tight; adds an abstraction not otherwise used | Rejected for v1 |
-| **GitHub Gist as KV** | Free | PAT needed | ❌ | Hacky, no realtime, PAT handling is risky client-side | Rejected |
-| **Custom backend** (Node+Postgres on Fly/Render) | Free-ish tiers | DIY | DIY | Everything Supabase gives, hand-rolled; ongoing maintenance burden | Rejected for v1 |
-
----
-
-## 15. Open Questions
-
-1. **Signup in-app?** The plan assumes dashboard-created users (private deployment). Should the app also expose a sign-up form (Supabase would need "Allow new users to sign up" + email confirmation)? Trivial to add later; default keeps the BYO project private to its owner. *(OQ-1)*
-2. **Clear All semantics** — confirmed preference for propagating wipes to the cloud (§9.4 Option A)? Some users may want the cloud to act as an off-device safety net that *survives* local wipes. *(OQ-2)*
-3. **Per-month granularity vs. per-rule rows** — if multi-device *simultaneous* edits to the same month become a real pattern, migrate `actuals`/`items` to normalized rows (§9.2 b) or implement field-level merge (a). Which matters more: simplicity (current choice) or guaranteed no-loss concurrent editing? *(OQ-3)*
-4. **LWW clock source** — client epoch ms (simple, skew-sensitive) vs. server `updated_at` (accurate, but needs read-before-write or a DB function for the client to stamp). Stay client-clock for v1? *(OQ-4)*
-5. **Multi-account** — should the app support switching between Supabase accounts/projects (e.g., family sharing a project with separate users)? Not planned for v1. *(OQ-5)*
-6. **Sync the Can-I-Buy draft** (`mrc_canibuy_state_v1`) as a small preference? Low value; excluded by default. *(OQ-6)*
-7. **Client-side encryption** — encrypt payloads with a user passphrase (zero-knowledge cloud) at the cost of losing server-side queryability and adding key-recovery pain (lost passphrase = lost data)? *(OQ-7)*
-8. **Env defaults vs. runtime config** — ship with empty defaults and require the settings screen (pure BYO), or allow the owner to bake their own project's URL/key at build time (single-tenant convenience)? Both are supported by the plan; default recommendation: runtime config wins if present. *(OQ-8)*
-9. **Free-tier ceiling awareness** — limits cited are approximate as of writing; the guided panel could link to the current Supabase pricing page rather than hardcoding numbers. *(OQ-9)*
-
----
-
-*End of plan — ready for implementation in phases; Phase 0–1 are the natural starting point.*
+*End of plan — ready for implementation in phases when requested; Phase 0–1 are the natural starting point.*

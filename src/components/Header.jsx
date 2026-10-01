@@ -6,12 +6,14 @@ export default function Header({
   onOpenReports,
   onOpenGoals,
   onOpenCanIBuy,
+  onOpenSync,
   onOpenBackup,
 }) {
   const isCalculator = currentView === "calculator";
   const isReports = currentView === "reports";
   const isGoals = currentView === "goals";
   const isCanIBuy = currentView === "canibuy";
+  const isSync = currentView === "sync";
 
   return (
     <header className="mrc-header">
@@ -89,7 +91,21 @@ export default function Header({
           <span className="mrc-btn-text-desktop">Can I buy?</span>
         </button>
 
-        {/* 5. Backup */}
+        {/* 5. Cloud Sync */}
+        <button
+          type="button"
+          className={`mrc-header-icon-btn ${isSync ? "mrc-header-btn-active" : ""}`}
+          onClick={onOpenSync}
+          title="Cloud Sync — Supabase"
+          aria-label="Cloud Sync"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
+            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+          </svg>
+          <span className="mrc-btn-text-desktop">Sync</span>
+        </button>
+
+        {/* 6. Backup */}
         <button
           type="button"
           className="mrc-header-icon-btn"

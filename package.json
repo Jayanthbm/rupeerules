@@ -13,6 +13,7 @@
     "deploy": "npm run build && wrangler pages deploy dist --project-name=rupeerules"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

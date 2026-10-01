@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDarkMode } from "./hooks/useDarkMode";
 import { useMoneyRules } from "./hooks/useMoneyRules";
+import { performFullSync } from "./utils/sync/syncEngine";
 import Header from "./components/Header";
 import CanIBuySection from "./components/CanIBuySection";
 import GoalsSection from "./components/GoalsSection";
@@ -9,11 +10,12 @@ import SalaryInput from "./components/SalaryInput";
 import EmptyState from "./components/EmptyState";
 import RulesTabSection from "./components/RulesTabSection";
 import ReportsPage from "./components/ReportsPage";
+import SyncPage from "./components/SyncPage";
 import BackupModal from "./components/BackupModal";
 
 export default function MoneyRulesCalculator() {
   const [darkMode, setDarkMode] = useDarkMode();
-  const [currentView, setCurrentView] = useState("calculator"); // 'calculator' | 'canibuy' | 'reports' | 'goals'
+  const [currentView, setCurrentView] = useState("calculator"); // 'calculator' | 'canibuy' | 'reports' | 'goals' | 'sync'
   const [showBackup, setShowBackup] = useState(false);
 
   const {
@@ -43,6 +45,37 @@ export default function MoneyRulesCalculator() {
     toggleMonthLock,
   } = useMoneyRules();
 
+  // Automatic background sync on app load, window focus, and state mutations
+  useEffect(() => {
+    // 1. Sync on mount & window focus
+    const runAutoSync = () => {
+      performFullSync(reloadFromStore);
+    };
+
+    runAutoSync();
+
+    const handleFocus = () => {
+      runAutoSync();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [reloadFromStore]);
+
+  // 2. Debounced background sync whenever store changes
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      performFullSync(reloadFromStore);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [store, reloadFromStore]);
+
   return (
     <div className="mrc-shell" data-theme={darkMode ? "dark" : "light"}>
       <Header
@@ -53,6 +86,7 @@ export default function MoneyRulesCalculator() {
         onOpenReports={() => setCurrentView("reports")}
         onOpenGoals={() => setCurrentView("goals")}
         onOpenCanIBuy={() => setCurrentView("canibuy")}
+        onOpenSync={() => setCurrentView("sync")}
         onOpenBackup={() => setShowBackup(true)}
       />
 
@@ -77,6 +111,8 @@ export default function MoneyRulesCalculator() {
           storeMonths={store?.months || {}}
           onNavigateToCalculator={() => setCurrentView("calculator")}
         />
+      ) : currentView === "sync" ? (
+        <SyncPage onReloadStore={reloadFromStore} />
       ) : (
         <>
           <MonthPicker
