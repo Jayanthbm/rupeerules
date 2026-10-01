@@ -1,6 +1,7 @@
 export default function Header({
   darkMode,
   currentView,
+  syncStatus = "synced", // 'synced' | 'syncing' | 'offline'
   onToggleDarkMode,
   onOpenCalculator,
   onOpenReports,
@@ -14,6 +15,14 @@ export default function Header({
   const isGoals = currentView === "goals";
   const isCanIBuy = currentView === "canibuy";
   const isSync = currentView === "sync";
+
+  const getSyncBadge = () => {
+    if (syncStatus === "syncing") return { color: "#eab308", label: "Syncing..." };
+    if (syncStatus === "offline") return { color: "#dc2626", label: "Offline" };
+    return { color: "#22c55e", label: "Synced" };
+  };
+
+  const badge = getSyncBadge();
 
   return (
     <header className="mrc-header">
@@ -96,12 +105,27 @@ export default function Header({
           type="button"
           className={`mrc-header-icon-btn ${isSync ? "mrc-header-btn-active" : ""}`}
           onClick={onOpenSync}
-          title="Cloud Sync — Supabase"
+          title={`Cloud Sync (${badge.label})`}
           aria-label="Cloud Sync"
+          style={{ position: "relative" }}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
-            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
-          </svg>
+          <div style={{ position: "relative", display: "inline-flex" }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
+              <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+            </svg>
+            <span
+              style={{
+                position: "absolute",
+                top: "-2px",
+                right: "-3px",
+                width: "7px",
+                height: "7px",
+                borderRadius: "50%",
+                backgroundColor: badge.color,
+                boxShadow: `0 0 4px ${badge.color}`,
+              }}
+            />
+          </div>
           <span className="mrc-btn-text-desktop">Sync</span>
         </button>
 

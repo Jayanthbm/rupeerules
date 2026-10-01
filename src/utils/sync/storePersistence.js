@@ -70,3 +70,31 @@ export function getSupabaseCredentials() {
   const anonKey = state.supabaseAnonKey || import.meta.env.VITE_SUPABASE_ANON_KEY || "";
   return { url, anonKey };
 }
+
+const SYNCED_SNAPSHOT_KEY = "rupeerules_synced_snapshot_v1";
+
+/**
+ * Get last known synced state from localStorage (eliminates GET network requests before push)
+ */
+export function getSyncedSnapshot() {
+  try {
+    const raw = localStorage.getItem(SYNCED_SNAPSHOT_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (err) {
+    return {};
+  }
+}
+
+/**
+ * Update last known synced state in localStorage after successful sync/push
+ */
+export function saveSyncedSnapshot(snapshot) {
+  try {
+    const current = getSyncedSnapshot();
+    const updated = { ...current, ...snapshot };
+    localStorage.setItem(SYNCED_SNAPSHOT_KEY, JSON.stringify(updated));
+    return updated;
+  } catch (err) {
+    console.error("Failed to save synced snapshot:", err);
+  }
+}

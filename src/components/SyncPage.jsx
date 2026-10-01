@@ -22,8 +22,9 @@ export default function SyncPage({ onReloadStore }) {
 
   const isConfigured = Boolean(syncState.supabaseUrl && syncState.supabaseAnonKey);
 
-  // Initialize client and session check
+  // Initialize client and session check & auto-refresh syncState
   useEffect(() => {
+    setSyncState(getSyncState());
     if (isConfigured) {
       const client = getSupabaseClient();
       if (client) {

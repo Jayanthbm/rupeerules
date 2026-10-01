@@ -1,6 +1,6 @@
 import { getSupabaseClient } from "./supabaseClient";
-import { getSyncState, saveSyncState, markDirtyKeys, clearDirtyKeys } from "./storePersistence";
-import { loadAllData, saveAllData } from "../storage";
+import { getSyncState, saveSyncState, markDirtyKeys, clearDirtyKeys, getSyncedSnapshot, saveSyncedSnapshot } from "./storePersistence";
+import { loadAllData, saveAllData, cleanBreakdownItems, cleanActuals } from "../storage";
 import { loadGoalsData, saveGoalsData } from "../goals";
 
 /**
@@ -27,12 +27,14 @@ export function mergeMonths(localMonths = {}, remoteRows = []) {
         salary: Number(remote.salary) || 0,
         actuals: remote.actuals || {},
         items: remote.items || {},
-        isLocked: Boolean(remote.is_locked),
+        isLocked: remote.is_locked !== null && remote.is_locked !== undefined ? Boolean(remote.is_locked) : undefined,
         updatedAt: new Date(remote.updated_at).getTime() || Date.now(),
       };
     } else {
-      // Both exist -> compare timestamps (Server updated_at vs local updatedAt)
-      const remoteTime = new Date(remote.updated_at).getTime() || 0;
+      // Both exist -> compare timestamps (Server updated_at / client_updated_at vs local updatedAt)
+      const remoteTime = typeof remote.client_updated_at === "number"
+        ? remote.client_updated_at
+        : new Date(remote.updated_at).getTime() || 0;
       const localTime = local.updatedAt || 0;
 
       if (remoteTime > localTime) {
@@ -41,7 +43,7 @@ export function mergeMonths(localMonths = {}, remoteRows = []) {
           salary: Number(remote.salary) || 0,
           actuals: remote.actuals || {},
           items: remote.items || {},
-          isLocked: Boolean(remote.is_locked),
+          isLocked: remote.is_locked !== null && remote.is_locked !== undefined ? Boolean(remote.is_locked) : local.isLocked,
           updatedAt: remoteTime,
         };
       } else if (localTime > remoteTime) {
@@ -108,6 +110,7 @@ export async function performFullSync(onReloadStore) {
 
     const updatedStore = { ...localStore, months: mergedMonths };
     saveAllData(updatedStore);
+    saveSyncedSnapshot(mergedMonths);
 
     // Only reload React UI if user is not actively typing in an input field
     const activeEl = document.activeElement;
@@ -157,12 +160,13 @@ export async function performFullSync(onReloadStore) {
         actuals: monthData.actuals || {},
         items: monthData.items || {},
         is_locked: Boolean(monthData.isLocked),
-        client_updated_at: monthData.updatedAt || Date.now(),
+        client_updated_at: typeof monthData.updatedAt === "number" ? monthData.updatedAt : Date.now(),
       };
 
       const { error: upsertError } = await client
         .from("rupee_rules_monthly_records")
-        .upsert(payload, { onConflict: "user_id,month_key" });
+        .upsert(payload, { onConflict: "user_id,month_key", ignoreDuplicates: false })
+        .select();
 
       if (!upsertError) {
         clearDirtyKeys(key);
@@ -210,7 +214,7 @@ export async function forceReSyncFromCloud(onReloadStore) {
         salary: Number(remote.salary) || 0,
         actuals: remote.actuals || {},
         items: remote.items || {},
-        isLocked: Boolean(remote.is_locked),
+        isLocked: remote.is_locked !== null && remote.is_locked !== undefined ? Boolean(remote.is_locked) : undefined,
         updatedAt: new Date(remote.updated_at).getTime() || Date.now(),
       };
     });
@@ -262,42 +266,81 @@ export async function clearDatabaseAndLocal() {
 }
 
 /**
- * Silent Push: Pushes current local store and goals to Supabase WITHOUT re-rendering local React state
+ * Silent Push: Pushes specific edited month (or all if omitted) and goals to Supabase WITHOUT re-rendering local React state
  */
-export async function pushLocalToCloud() {
+export async function pushLocalToCloud(targetMonthKey) {
   const client = getSupabaseClient();
   if (!client) return { success: false, error: "Not configured" };
 
-  const { data: userData } = await client.auth.getUser();
-  if (!userData?.user) return { success: false, error: "Not logged in" };
+  const { data: sessionData } = await client.auth.getSession();
+  if (!sessionData?.session?.user) return { success: false, error: "Not logged in" };
 
-  const userId = userData.user.id;
+  const userId = sessionData.session.user.id;
 
   try {
     const localStore = loadAllData();
     const localGoals = loadGoalsData();
-
-    // 1. Push all local months
     const months = localStore.months || {};
-    for (const key of Object.keys(months)) {
-      const monthData = months[key];
-      const payload = {
-        user_id: userId,
-        month_key: key,
-        salary: monthData.salary || 0,
-        actuals: monthData.actuals || {},
-        items: monthData.items || {},
-        is_locked: Boolean(monthData.isLocked),
-        client_updated_at: monthData.updatedAt || Date.now(),
-      };
 
-      await client
-        .from("rupee_rules_monthly_records")
-        .upsert(payload, { onConflict: "user_id,month_key" });
+    // Determine which keys to push: targetMonthKey if provided, else all local months
+    const keysToPush = targetMonthKey && months[targetMonthKey] ? [targetMonthKey] : Object.keys(months);
+
+    if (keysToPush.length > 0) {
+      // 1a. Read last known synced snapshot from localStorage (0 network GET requests!)
+      const syncedSnapshotMap = getSyncedSnapshot();
+
+      const payloadsToPush = [];
+      const updatedSnapshotMap = {};
+
+      for (const key of keysToPush) {
+        const monthData = months[key];
+        const cleanedItems = cleanBreakdownItems(monthData.items || {}, true);
+        const cleanedActuals = monthData.actuals || {};
+
+        const payload = {
+          user_id: userId,
+          month_key: key,
+          salary: Number(monthData.salary) || 0,
+          actuals: cleanedActuals,
+          items: cleanedItems,
+          is_locked: Boolean(monthData.isLocked),
+          client_updated_at: typeof monthData.updatedAt === "number" ? monthData.updatedAt : Date.now(),
+        };
+
+        // Deep equality check against local synced snapshot: skip push if unchanged
+        const synced = syncedSnapshotMap[key];
+        if (synced) {
+          const isSalarySame = Number(synced.salary) === payload.salary;
+          const isLockedSame = Boolean(synced.is_locked) === payload.is_locked;
+          const isActualsSame = JSON.stringify(synced.actuals || {}) === JSON.stringify(payload.actuals);
+          const isItemsSame = JSON.stringify(synced.items || {}) === JSON.stringify(payload.items);
+
+          if (isSalarySame && isLockedSame && isActualsSame && isItemsSame) {
+            // Unchanged since last sync: Skip network request completely!
+            continue;
+          }
+        }
+
+        payloadsToPush.push(payload);
+        updatedSnapshotMap[key] = payload;
+      }
+
+      if (payloadsToPush.length > 0) {
+        // Upsert modified rows in 1 single HTTP POST call
+        const { error: pushErr } = await client
+          .from("rupee_rules_monthly_records")
+          .upsert(payloadsToPush, { onConflict: "user_id,month_key", ignoreDuplicates: false })
+          .select();
+
+        if (pushErr) throw pushErr;
+
+        // Save pushed payload to local synced snapshot cache
+        saveSyncedSnapshot(updatedSnapshotMap);
+      }
     }
 
-    // 2. Push local goals
-    if (localGoals) {
+    // 2. Push local goals only during full sync (when targetMonthKey is not passed)
+    if (!targetMonthKey && localGoals) {
       await client.from("rupee_rules_goals").upsert({
         user_id: userId,
         data: localGoals,

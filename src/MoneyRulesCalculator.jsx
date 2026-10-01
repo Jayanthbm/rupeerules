@@ -48,6 +48,8 @@ export default function MoneyRulesCalculator() {
     toggleMonthLock,
   } = useMoneyRules();
 
+  const [syncStatus, setSyncStatus] = useState("synced"); // 'synced' | 'syncing' | 'offline'
+
   // 1. Pull from cloud on App Load if last sync was > 15 mins ago
   useEffect(() => {
     const syncState = getSyncState();
@@ -55,7 +57,10 @@ export default function MoneyRulesCalculator() {
     const now = Date.now();
 
     if (now - lastSync > FIFTEEN_MINS_MS) {
-      performFullSync(reloadFromStore);
+      setSyncStatus("syncing");
+      performFullSync(reloadFromStore).then((res) => {
+        setSyncStatus(res.success ? "synced" : "offline");
+      });
     }
   }, [reloadFromStore]);
 
@@ -67,18 +72,21 @@ export default function MoneyRulesCalculator() {
       isFirstRender.current = false;
       return;
     }
-    const timer = setTimeout(() => {
-      pushLocalToCloud();
+    setSyncStatus("syncing");
+    const timer = setTimeout(async () => {
+      const res = await pushLocalToCloud(activeMonth);
+      setSyncStatus(res.success ? "synced" : "offline");
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [store]);
+  }, [store, activeMonth, breakdownItems, actuals, salary]);
 
   return (
     <div className="mrc-shell" data-theme={darkMode ? "dark" : "light"}>
       <Header
         darkMode={darkMode}
         currentView={currentView}
+        syncStatus={syncStatus}
         onToggleDarkMode={() => setDarkMode((prev) => !prev)}
         onOpenCalculator={() => setCurrentView("calculator")}
         onOpenReports={() => setCurrentView("reports")}

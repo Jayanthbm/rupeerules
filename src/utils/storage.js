@@ -44,13 +44,20 @@ export function cleanActuals(actuals) {
   return cleaned;
 }
 
-/** Clean up empty breakdown rows */
-export function cleanBreakdownItems(items) {
+/** Clean up empty breakdown rows (must have non-empty amount or name) */
+export function cleanBreakdownItems(items, forSync = false) {
   if (!items || typeof items !== "object") return {};
   const cleaned = {};
   for (const [ruleId, list] of Object.entries(items)) {
     if (Array.isArray(list)) {
-      cleaned[ruleId] = list.filter((it) => it && (it.name || it.amount));
+      cleaned[ruleId] = list.filter((it) => {
+        if (!it) return false;
+        if (forSync) {
+          // Before syncing to cloud: item MUST have a valid non-empty amount string/number
+          return it.amount !== "" && it.amount !== undefined && it.amount !== null && Number(it.amount) !== 0;
+        }
+        return it.name || it.amount || (it.id && it.id.startsWith("custom_"));
+      });
     }
   }
   return cleaned;
