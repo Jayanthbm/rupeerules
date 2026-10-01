@@ -256,3 +256,56 @@ export async function clearDatabaseAndLocal() {
   localStorage.removeItem("rupeerules_goals_v1");
   saveSyncState({ dirtyKeys: [], clearedAt: Date.now() });
 }
+
+/**
+ * Silent Push: Pushes current local store and goals to Supabase WITHOUT re-rendering local React state
+ */
+export async function pushLocalToCloud() {
+  const client = getSupabaseClient();
+  if (!client) return { success: false, error: "Not configured" };
+
+  const { data: userData } = await client.auth.getUser();
+  if (!userData?.user) return { success: false, error: "Not logged in" };
+
+  const userId = userData.user.id;
+
+  try {
+    const localStore = loadAllData();
+    const localGoals = loadGoalsData();
+
+    // 1. Push all local months
+    const months = localStore.months || {};
+    for (const key of Object.keys(months)) {
+      const monthData = months[key];
+      const payload = {
+        user_id: userId,
+        month_key: key,
+        salary: monthData.salary || 0,
+        actuals: monthData.actuals || {},
+        items: monthData.items || {},
+        is_locked: Boolean(monthData.isLocked),
+        client_updated_at: monthData.updatedAt || Date.now(),
+      };
+
+      await client
+        .from("rupee_rules_monthly_records")
+        .upsert(payload, { onConflict: "user_id,month_key" });
+    }
+
+    // 2. Push local goals
+    if (localGoals) {
+      await client.from("rupee_rules_goals").upsert({
+        user_id: userId,
+        data: localGoals,
+        client_updated_at: localGoals.updatedAt || Date.now(),
+      }, { onConflict: "user_id" });
+    }
+
+    saveSyncState({ lastSyncedAt: Date.now() });
+    return { success: true };
+  } catch (err) {
+    console.error("Silent push error:", err);
+    return { success: false, error: err.message };
+  }
+}
+

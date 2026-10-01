@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useDarkMode } from "./hooks/useDarkMode";
 import { useMoneyRules } from "./hooks/useMoneyRules";
-import { performFullSync } from "./utils/sync/syncEngine";
+import { performFullSync, pushLocalToCloud } from "./utils/sync/syncEngine";
+import { getSyncState } from "./utils/sync/storePersistence";
 import Header from "./components/Header";
 import CanIBuySection from "./components/CanIBuySection";
 import GoalsSection from "./components/GoalsSection";
@@ -12,6 +13,8 @@ import RulesTabSection from "./components/RulesTabSection";
 import ReportsPage from "./components/ReportsPage";
 import SyncPage from "./components/SyncPage";
 import BackupModal from "./components/BackupModal";
+
+const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
 export default function MoneyRulesCalculator() {
   const [darkMode, setDarkMode] = useDarkMode();
@@ -45,10 +48,31 @@ export default function MoneyRulesCalculator() {
     toggleMonthLock,
   } = useMoneyRules();
 
-  // Manual sync function triggered on demand (e.g. from Sync tab or sync status button)
-  const handleManualSync = () => {
-    performFullSync(reloadFromStore);
-  };
+  // 1. Pull from cloud on App Load ONLY if last sync was > 2 hours ago
+  useEffect(() => {
+    const syncState = getSyncState();
+    const lastSync = syncState.lastSyncedAt || 0;
+    const now = Date.now();
+
+    if (now - lastSync > TWO_HOURS_MS) {
+      performFullSync(reloadFromStore);
+    }
+  }, [reloadFromStore]);
+
+  // 2. Silent background push (Local -> Cloud) on store edit (debounced 3.5s)
+  // Does NOT reload React state, ensuring input focus, item creation, and lock status stay 100% stable
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      pushLocalToCloud();
+    }, 3500);
+
+    return () => clearTimeout(timer);
+  }, [store]);
 
   return (
     <div className="mrc-shell" data-theme={darkMode ? "dark" : "light"}>
