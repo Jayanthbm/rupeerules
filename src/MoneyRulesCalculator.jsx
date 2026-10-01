@@ -45,36 +45,10 @@ export default function MoneyRulesCalculator() {
     toggleMonthLock,
   } = useMoneyRules();
 
-  // Automatic background sync on app load, window focus, and state mutations
-  useEffect(() => {
-    // 1. Sync on mount & window focus
-    const runAutoSync = () => {
-      performFullSync(reloadFromStore);
-    };
-
-    runAutoSync();
-
-    const handleFocus = () => {
-      runAutoSync();
-    };
-
-    window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
-  }, [reloadFromStore]);
-
-  // 2. Debounced background sync whenever store changes
-  const isFirstRender = useRef(true);
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    const timer = setTimeout(() => {
-      performFullSync(reloadFromStore);
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, [store, reloadFromStore]);
+  // Manual sync function triggered on demand (e.g. from Sync tab or sync status button)
+  const handleManualSync = () => {
+    performFullSync(reloadFromStore);
+  };
 
   return (
     <div className="mrc-shell" data-theme={darkMode ? "dark" : "light"}>
