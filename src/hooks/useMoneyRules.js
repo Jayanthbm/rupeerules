@@ -411,20 +411,21 @@ export function useMoneyRules() {
       return;
     }
 
-    if (salary > 0 || Object.keys(actuals).length > 0) {
-      const loaded = loadAllData();
-      const activeM = loaded.activeMonth || getCurrentMonthKey();
-      const updatedMonths = {
-        ...(loaded.months || {}),
-        [activeM]: {
-          salary,
-          actuals: cleanActuals(actuals),
-          items: cleanBreakdownItems(breakdownItems),
-          updatedAt: Date.now(),
-        },
-      };
-      saveAllData({ ...loaded, months: updatedMonths });
-    }
+    const loaded = loadAllData();
+    const activeM = loaded.activeMonth || getCurrentMonthKey();
+    const existingMonthData = loaded.months?.[activeM] || {};
+
+    const updatedMonths = {
+      ...(loaded.months || {}),
+      [activeM]: {
+        ...existingMonthData,
+        salary,
+        actuals: cleanActuals(actuals),
+        items: cleanBreakdownItems(breakdownItems),
+        updatedAt: Date.now(),
+      },
+    };
+    saveAllData({ ...loaded, months: updatedMonths });
   }, [salary, actuals, breakdownItems]);
 
   const handleSalaryChange = useCallback((value) => {

@@ -14,7 +14,7 @@ import ReportsPage from "./components/ReportsPage";
 import SyncPage from "./components/SyncPage";
 import BackupModal from "./components/BackupModal";
 
-const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+const FIFTEEN_MINS_MS = 15 * 60 * 1000;
 
 export default function MoneyRulesCalculator() {
   const [darkMode, setDarkMode] = useDarkMode();
@@ -48,18 +48,18 @@ export default function MoneyRulesCalculator() {
     toggleMonthLock,
   } = useMoneyRules();
 
-  // 1. Pull from cloud on App Load ONLY if last sync was > 2 hours ago
+  // 1. Pull from cloud on App Load if last sync was > 15 mins ago
   useEffect(() => {
     const syncState = getSyncState();
     const lastSync = syncState.lastSyncedAt || 0;
     const now = Date.now();
 
-    if (now - lastSync > TWO_HOURS_MS) {
+    if (now - lastSync > FIFTEEN_MINS_MS) {
       performFullSync(reloadFromStore);
     }
   }, [reloadFromStore]);
 
-  // 2. Silent background push (Local -> Cloud) on store edit (debounced 3.5s)
+  // 2. Silent background push (Local -> Cloud) on store edit (debounced 2s)
   // Does NOT reload React state, ensuring input focus, item creation, and lock status stay 100% stable
   const isFirstRender = useRef(true);
   useEffect(() => {
@@ -69,7 +69,7 @@ export default function MoneyRulesCalculator() {
     }
     const timer = setTimeout(() => {
       pushLocalToCloud();
-    }, 3500);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [store]);

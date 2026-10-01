@@ -108,7 +108,11 @@ export async function performFullSync(onReloadStore) {
 
     const updatedStore = { ...localStore, months: mergedMonths };
     saveAllData(updatedStore);
-    if (typeof onReloadStore === "function") {
+
+    // Only reload React UI if user is not actively typing in an input field
+    const activeEl = document.activeElement;
+    const isTyping = activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA");
+    if (!isTyping && typeof onReloadStore === "function") {
       onReloadStore(updatedStore);
     }
 
