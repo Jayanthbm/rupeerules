@@ -190,15 +190,15 @@ export default function SyncPage({ onReloadStore }) {
 
       {/* Section 1: Supabase Configuration & Status */}
       <section className="mrc-input-section" style={{ marginBottom: "20px", padding: "16px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
+        <div className="mrc-sync-header-wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <h3 style={{ fontSize: "16px", margin: 0, marginBottom: "6px" }}>Supabase Connection</h3>
-            <div style={{ fontSize: "13px", color: "var(--mrc-subtext)", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+            <div style={{ fontSize: "13px", color: "var(--mrc-subtext)", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", wordBreak: "break-all" }}>
               {isConfigured ? (
                 <>
                   <span>✓ <strong>Configured</strong></span>
                   <span>•</span>
-                  <code style={{ fontSize: "12px", background: "rgba(255,255,255,0.06)", padding: "2px 6px", borderRadius: "4px" }}>
+                  <code style={{ fontSize: "12px", background: "rgba(255,255,255,0.06)", padding: "2px 6px", borderRadius: "4px", wordBreak: "break-all" }}>
                     {syncState.supabaseUrl}
                   </code>
                 </>
@@ -227,7 +227,7 @@ export default function SyncPage({ onReloadStore }) {
               className="mrc-calculate-btn"
               type="button"
               onClick={() => setIsEditingConfig(true)}
-              style={{ padding: "4px 12px", fontSize: "12px" }}
+              style={{ padding: "6px 12px", fontSize: "12px", shrink: 0, whiteSpace: "nowrap" }}
             >
               ✏️ Edit Config
             </button>
@@ -264,8 +264,8 @@ export default function SyncPage({ onReloadStore }) {
               />
             </div>
 
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button className="mrc-calculate-btn" type="submit" disabled={loading}>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              <button className="mrc-calculate-btn" type="submit" disabled={loading} style={{ flex: 1, minWidth: "160px" }}>
                 {loading ? "Validating..." : "Validate & Save Configuration"}
               </button>
               {isConfigured && (
@@ -308,7 +308,7 @@ export default function SyncPage({ onReloadStore }) {
                 style={{ width: "100%" }}
               />
             </div>
-            <button className="mrc-calculate-btn" type="submit" disabled={loading}>
+            <button className="mrc-calculate-btn" type="submit" disabled={loading} style={{ width: "100%" }}>
               {loading ? "Logging in..." : "Log In"}
             </button>
           </form>
@@ -317,8 +317,8 @@ export default function SyncPage({ onReloadStore }) {
 
       {/* Section 3: Sync Actions & Management (Clean Redesign) */}
       {isConfigured && user && (
-        <section className="mrc-input-section" style={{ marginBottom: "20px", padding: "20px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+        <section className="mrc-input-section" style={{ marginBottom: "20px", padding: "16px" }}>
+          <div className="mrc-sync-header-wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "8px", flexWrap: "wrap", marginBottom: "16px" }}>
             <h3 style={{ fontSize: "16px", margin: 0 }}>Sync Actions & Account Management</h3>
             <span style={{ fontSize: "12px", color: "var(--mrc-subtext)" }}>
               {syncState.lastSyncedAt
@@ -328,14 +328,14 @@ export default function SyncPage({ onReloadStore }) {
           </div>
 
           {/* Quick Action Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px", marginBottom: "20px" }}>
+          <div className="mrc-sync-actions-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "10px", marginBottom: "20px" }}>
             {/* 1. Sync Now */}
             <button
               className="mrc-calculate-btn"
               onClick={handleSyncNow}
               disabled={syncing || loading}
               type="button"
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "10px 16px" }}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "10px 16px", width: "100%" }}
             >
               <span>⚡</span>
               <span>{syncing ? "Syncing..." : "Sync Now"}</span>
@@ -347,7 +347,7 @@ export default function SyncPage({ onReloadStore }) {
               onClick={handleForceReSync}
               disabled={syncing || loading}
               type="button"
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "10px 16px", backgroundColor: "rgba(37, 99, 235, 0.15)", color: "#2563eb", border: "1px solid rgba(37, 99, 235, 0.3)" }}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "10px 16px", width: "100%", backgroundColor: "rgba(37, 99, 235, 0.15)", color: "#2563eb", border: "1px solid rgba(37, 99, 235, 0.3)" }}
               title="Clears local storage and pulls fresh data from Supabase"
             >
               <span>🔄</span>
@@ -360,7 +360,7 @@ export default function SyncPage({ onReloadStore }) {
               onClick={handleSignOut}
               disabled={syncing || loading}
               type="button"
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "10px 16px" }}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "10px 16px", width: "100%" }}
             >
               <span>🚪</span>
               <span>Sign Out</span>
@@ -369,8 +369,8 @@ export default function SyncPage({ onReloadStore }) {
 
           {/* Danger Zone */}
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "16px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
+            <div className="mrc-danger-zone-wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: "200px" }}>
                 <h4 style={{ fontSize: "14px", color: "#dc2626", margin: 0, marginBottom: "2px" }}>Clear DB & Local Storage</h4>
                 <p style={{ fontSize: "12px", color: "var(--mrc-subtext)", margin: 0 }}>
                   Permanently wipe all records from both Supabase cloud database and local browser.
@@ -381,7 +381,7 @@ export default function SyncPage({ onReloadStore }) {
                 onClick={handleClearDatabaseAndLocal}
                 disabled={loading || syncing}
                 type="button"
-                style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.4)", padding: "6px 14px", fontSize: "12px", whiteSpace: "nowrap" }}
+                style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.4)", padding: "8px 16px", fontSize: "12px", whiteSpace: "nowrap" }}
               >
                 🗑️ Clear All
               </button>

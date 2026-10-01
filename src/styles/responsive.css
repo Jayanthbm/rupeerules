@@ -216,4 +216,27 @@
   .mrc-backup-actions-grid {
     grid-template-columns: 1fr;
   }
+
+  /* Sync Page Mobile Adjustments */
+  .mrc-sync-page {
+    padding: 14px !important;
+  }
+
+  .mrc-sync-header-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .mrc-sync-actions-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .mrc-danger-zone-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .mrc-danger-zone-wrap button {
+    width: 100% !important;
+  }
 }
