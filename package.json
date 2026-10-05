@@ -10,7 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "vite preview",
-    "deploy": "npm run build && wrangler pages deploy dist --project-name=rupeerules"
+    "deploy": "npm run build && npx wrangler pages deploy dist --project-name=rupeerules"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
