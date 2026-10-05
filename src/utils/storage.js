@@ -117,11 +117,25 @@ export function saveAllData(store) {
 export function exportBackupJSON() {
   const data = loadAllData();
   const goals = loadGoalsData();
+
+  // Filter out any months without salary entered
+  const cleanedMonths = {};
+  if (data.months && typeof data.months === "object") {
+    for (const [key, monthData] of Object.entries(data.months)) {
+      if (Number(monthData?.salary) > 0) {
+        cleanedMonths[key] = monthData;
+      }
+    }
+  }
+
   const payload = {
     appName: "RupeeRules",
     version: 3,
     exportedAt: new Date().toISOString(),
-    data,
+    data: {
+      ...data,
+      months: cleanedMonths,
+    },
     goals,
   };
   return JSON.stringify(payload, null, 2);

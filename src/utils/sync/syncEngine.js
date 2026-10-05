@@ -153,10 +153,13 @@ export async function performFullSync(onReloadStore) {
       const monthData = mergedMonths[key];
       if (!monthData) continue;
 
+      const salaryVal = Number(monthData.salary) || 0;
+      if (salaryVal <= 0) continue;
+
       const payload = {
         user_id: userId,
         month_key: key,
-        salary: monthData.salary || 0,
+        salary: salaryVal,
         actuals: monthData.actuals || {},
         items: monthData.items || {},
         is_locked: Boolean(monthData.isLocked),
@@ -294,13 +297,18 @@ export async function pushLocalToCloud(targetMonthKey) {
 
       for (const key of keysToPush) {
         const monthData = months[key];
+        const salaryVal = Number(monthData?.salary) || 0;
+
+        // Skip syncing to cloud if salary is not entered (0 or missing)
+        if (salaryVal <= 0) continue;
+
         const cleanedItems = cleanBreakdownItems(monthData.items || {}, true);
         const cleanedActuals = monthData.actuals || {};
 
         const payload = {
           user_id: userId,
           month_key: key,
-          salary: Number(monthData.salary) || 0,
+          salary: salaryVal,
           actuals: cleanedActuals,
           items: cleanedItems,
           is_locked: Boolean(monthData.isLocked),

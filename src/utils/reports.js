@@ -11,7 +11,9 @@ export function computeReportsData(months) {
     };
   }
 
-  const monthKeys = Object.keys(months).sort();
+  const monthKeys = Object.keys(months)
+    .filter((key) => Number(months[key]?.salary) > 0)
+    .sort();
   let trackedSalary = 0;
   let trackedSpending = 0;
   let trackedInvested = 0;
