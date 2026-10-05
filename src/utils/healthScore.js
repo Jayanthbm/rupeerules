@@ -1,10 +1,23 @@
 /** Calculate an overall financial health score (0-100) based on how well
- *  the user is following their money rules. */
+ *  the user is following their money rules and staying within total monthly salary budget. */
 export function calculateHealthScore(rules) {
   if (!rules || rules.length === 0) return 0;
 
   let totalScore = 0;
   let count = 0;
+
+  // Calculate total monthly salary (derived from any rule's recommended amount)
+  // Essential rule (id: 1) recommended = 0.55 * salary
+  const essentialRule = rules.find((r) => r.id === 1);
+  const salary = essentialRule && essentialRule.recommended > 0 ? essentialRule.recommended / 0.55 : 0;
+
+  // Calculate total monthly spending across rules 1 to 5 (Monthly Outflows)
+  let totalMonthlyOutflow = 0;
+  for (const r of rules) {
+    if (r.id >= 1 && r.id <= 5 && r.actual && typeof r.actual === "number") {
+      totalMonthlyOutflow += r.actual;
+    }
+  }
 
   for (const rule of rules) {
     if (rule.actualRaw === "" || rule.actualRaw === undefined || rule.actualRaw === null) {
@@ -14,29 +27,30 @@ export function calculateHealthScore(rules) {
     const recommended = rule.recommended;
     const actual = rule.actual;
 
-    if (recommended === 0) continue;
+    if (recommended === 0 && rule.id !== 2) continue;
 
     let ruleScore;
 
     if (rule.id === 1) {
-      // Essential expenses - should be at or under the max
+      // Essential expenses - max ceiling
       if (actual <= recommended) {
         ruleScore = 100;
       } else {
         const overPercent = ((actual - recommended) / recommended) * 100;
-        ruleScore = Math.max(0, 100 - overPercent * 2);
+        ruleScore = Math.max(0, 100 - overPercent * 2.5);
       }
     } else if (rule.id === 2) {
-      // Guilt-free money
+      // Guilt-free money - ceiling rule with progressive penalty
       if (actual > 0 && actual <= recommended) {
         ruleScore = 100;
       } else if (actual > recommended) {
-        ruleScore = 80;
+        const overPercent = recommended > 0 ? ((actual - recommended) / recommended) * 100 : 50;
+        ruleScore = Math.max(0, 100 - overPercent * 2);
       } else {
         ruleScore = 50;
       }
     } else if (rule.id === 3 || rule.id === 5) {
-      // Investing/debt rules - should meet or exceed
+      // Debt / Long-term investing rules - should meet or exceed target
       if (actual >= recommended) {
         ruleScore = 100;
       } else {
@@ -55,7 +69,7 @@ export function calculateHealthScore(rules) {
         ruleScore = 100;
       } else {
         const overPercent = ((actual - recommended) / recommended) * 100;
-        ruleScore = Math.max(0, 100 - overPercent * 2);
+        ruleScore = Math.max(0, 100 - overPercent * 2.5);
       }
     } else {
       // Lump sum targets: Emergency fund (7), Corpus FIRE (8)
@@ -70,7 +84,27 @@ export function calculateHealthScore(rules) {
     count++;
   }
 
-  return count > 0 ? Math.round(totalScore / count) : 0;
+  let finalScore = count > 0 ? Math.round(totalScore / count) : 0;
+
+  // Apply Net Cashflow Budget Deficit Penalty
+  // If Total Monthly Outflow (Rules 1-5) exceeds Take-Home Salary, cap maximum achievable health score
+  if (salary > 0 && totalMonthlyOutflow > salary) {
+    const overbudgetAmount = totalMonthlyOutflow - salary;
+    const overbudgetPercent = (overbudgetAmount / salary) * 100;
+
+    let maxCap = 100;
+    if (overbudgetPercent > 15) {
+      maxCap = 35; // Severe overbudget deficit (>15% over salary)
+    } else if (overbudgetPercent > 5) {
+      maxCap = 50; // Moderate overbudget deficit (5-15% over salary)
+    } else {
+      maxCap = 65; // Mild overbudget deficit (1-5% over salary)
+    }
+
+    finalScore = Math.min(finalScore, maxCap);
+  }
+
+  return finalScore;
 }
 
 /** Get label, color and emoji for a health score. */

@@ -47,7 +47,7 @@ describe("calculateHealthScore", () => {
 
   it("penalizes overspending guilt-free money mildly", () => {
     const score = calculateHealthScore([rule(2, "6000", 6000, 5000)]);
-    expect(score).toBe(80);
+    expect(score).toBe(60);
   });
 });
 

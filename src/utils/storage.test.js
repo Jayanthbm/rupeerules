@@ -95,7 +95,7 @@ describe("exportBackupJSON / importBackupJSON", () => {
     const json = exportBackupJSON();
     const parsed = JSON.parse(json);
     expect(parsed.appName).toBe("RupeeRules");
-    expect(parsed.version).toBe(2);
+    expect(parsed.version).toBe(3);
 
     localStorage.clear();
     const result = importBackupJSON(json);
