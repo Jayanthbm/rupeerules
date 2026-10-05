@@ -499,7 +499,7 @@ export function useMoneyRules() {
       if (rule.id === 7) {
         if (hasEmergencyAvg && avgEmergencyExpense > 0) {
           recommended = avgEmergencyExpense * 6;
-          dynamicNote = `Calculated as 6 × Avg Non-Negotiable Expenses (₹${avgEmergencyExpense.toLocaleString("en-IN")}/mo Essentials + EMIs based on ${reportsData.activeMonthCount || 3}+ months recorded data).`;
+          dynamicNote = `Calculated as 6 × Avg Non-Negotiable Expenses (₹${avgEmergencyExpense.toLocaleString("en-IN")}/mo Essentials + Debt based on ${reportsData.activeMonthCount || 6}+ months recorded data).`;
           adaptiveBadge = {
             icon: "🎯",
             text: "Adaptive: 6-Mo Non-negotiable Expenses",
@@ -508,7 +508,7 @@ export function useMoneyRules() {
             bg: "rgba(190,24,93,0.12)",
           };
         } else {
-          dynamicNote = `Calculated as Monthly salary × 6. (Track 3+ months to unlock adaptive benchmark based on real non-negotiable expenses).`;
+          dynamicNote = `Calculated as Monthly salary × 6. (Track 6+ months to unlock adaptive benchmark based on real non-negotiable expenses).`;
         }
       } else if (rule.id === 8) {
         if (hasFireAvg && avgLivingExpense > 0) {
@@ -522,7 +522,7 @@ export function useMoneyRules() {
             bg: "rgba(202,138,4,0.12)",
           };
         } else {
-          dynamicNote = `Calculated as Monthly salary × 120 (10× Annual Salary milestone). Track 6+ months to unlock adaptive 25× real living expenses FIRE target.`;
+          dynamicNote = `Calculated as Monthly salary × 120 (10× Annual Salary milestone). Track 12+ months to unlock adaptive 25× real living expenses FIRE target.`;
         }
       }
 

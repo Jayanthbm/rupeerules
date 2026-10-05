@@ -42,26 +42,27 @@ describe("computeReportsData", () => {
     expect(row.emergencySource).toContain("6× Monthly Salary");
   });
 
-  it("switches to adaptive expense-based benchmarks after 3 months", () => {
-    const report = computeReportsData({
-      "2026-01": month(100000, { 1: 50000, 6: 20000 }),
-      "2026-02": month(100000, { 1: 52000, 6: 20000 }),
-      "2026-03": month(100000, { 1: 54000, 6: 20000 }),
-    });
-    expect(report.hasEmergencyAvg).toBe(true);
-    expect(report.hasFireAvg).toBe(false); // needs 6 months
-    // avg non-negotiables = (70000 + 72000 + 74000)/3 = 72000
-    expect(report.avgEmergencyExpense).toBe(72000);
-    const row = report.monthlyBreakdowns[0];
-    expect(row.targetEmergency).toBe(432000); // 72000 × 6
-    expect(row.emergencySource).toContain("Avg Essentials+EMI");
-  });
-
-  it("unlocks the 25× living-expenses FIRE target after 6 months", () => {
+  it("switches to adaptive expense-based benchmarks after 6 months", () => {
     const months = {};
     for (let i = 1; i <= 6; i++) {
       const key = `2026-0${i}`;
-      months[key] = month(100000, { 1: 50000, 2: 5000, 6: 20000 });
+      months[key] = month(100000, { 1: 50000 + (i - 1) * 2000, 3: 20000 });
+    }
+    const report = computeReportsData(months);
+    expect(report.hasEmergencyAvg).toBe(true);
+    expect(report.hasFireAvg).toBe(false); // needs 12 months
+    expect(report.avgEmergencyExpense).toBe(75000);
+    const row = report.monthlyBreakdowns[0];
+    expect(row.targetEmergency).toBe(450000); // 75000 × 6
+    expect(row.emergencySource).toContain("Avg Essentials+Debt");
+  });
+
+  it("unlocks the 25× living-expenses FIRE target after 12 months", () => {
+    const months = {};
+    for (let i = 1; i <= 12; i++) {
+      const monthStr = String(i).padStart(2, "0");
+      const key = `2026-${monthStr}`;
+      months[key] = month(100000, { 1: 50000, 2: 5000, 3: 20000 });
     }
     const report = computeReportsData(months);
     expect(report.hasFireAvg).toBe(true);

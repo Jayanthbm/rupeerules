@@ -36,8 +36,8 @@ export function computeReportsData(months) {
     const fireCorpus = Number(act[8]) || 0;
 
     const totalSpending = essentials + guiltFree + debt + goals + wealth;
-    const livingExpenses = essentials + guiltFree + maxEmi; // actual living costs
-    const nonNegotiableCosts = essentials + maxEmi; // survival costs for emergency
+    const livingExpenses = essentials + guiltFree + debt; // core living expenses (Rules 1 + 2 + 3)
+    const nonNegotiableCosts = essentials + debt; // non-negotiable survival & debt costs for emergency buffer
 
     if (sal > 0) {
       trackedSalary += sal;
@@ -78,9 +78,9 @@ export function computeReportsData(months) {
   const recordedCount = monthsWithEssentials.length;
 
   // Emergency Fund Benchmark:
-  // If >= 3 months recorded: Average non-negotiable expenses (Essentials + EMIs) * 6
+  // If >= 6 months recorded: Average non-negotiable expenses (Essentials + Debt) * 6
   // Otherwise: Salary * 6 fallback
-  const hasEmergencyAvg = recordedCount >= 3;
+  const hasEmergencyAvg = recordedCount >= 6;
   const avgEmergencyExpense = hasEmergencyAvg
     ? Math.round(
         monthsWithEssentials.reduce((acc, r) => acc + (r.nonNegotiableCosts > 0 ? r.nonNegotiableCosts : r.salary * 0.55), 0) /
@@ -89,9 +89,9 @@ export function computeReportsData(months) {
     : 0;
 
   // FIRE Number Benchmark:
-  // If >= 6 months recorded: 25x Annual Living Expenses (Avg Monthly Living Expenses * 12 * 25)
+  // If >= 12 months recorded: 25x Annual Living Expenses (Avg Monthly Living Expenses * 12 * 25)
   // Otherwise: Salary * 120 (10x Annual Salary milestone fallback)
-  const hasFireAvg = recordedCount >= 6;
+  const hasFireAvg = recordedCount >= 12;
   const avgLivingExpense = hasFireAvg
     ? Math.round(
         monthsWithEssentials.reduce((acc, r) => acc + (r.livingExpenses > 0 ? r.livingExpenses : r.salary * 0.60), 0) /
@@ -113,7 +113,7 @@ export function computeReportsData(months) {
       ...r,
       targetEmergency,
       targetFire,
-      emergencySource: hasEmergencyAvg ? `6× Avg Essentials+EMI (₹${avgEmergencyExpense.toLocaleString("en-IN")}/mo)` : "6× Monthly Salary",
+      emergencySource: hasEmergencyAvg ? `6× Avg Essentials+Debt (₹${avgEmergencyExpense.toLocaleString("en-IN")}/mo)` : "6× Monthly Salary",
       fireSource: hasFireAvg ? `25× Annual Expenses (₹${avgLivingExpense.toLocaleString("en-IN")}/mo)` : "120× Monthly Salary (10× Annual)",
       isEmergencyAdaptive: hasEmergencyAvg,
       isFireAdaptive: hasFireAvg,
