@@ -87,6 +87,8 @@ export function evaluatePurchase({
   price,
   salary,
   essentialsActual,
+  guiltFreeActual,
+  debtActual,
   investmentsActual,
   goalsActual,
   maxEmiActual,
@@ -96,6 +98,8 @@ export function evaluatePurchase({
   const priceNum = Number(price) || 0;
   const salaryNum = Number(salary) || 0;
   const essentials = Number(essentialsActual) || 0;
+  const guiltFree = Number(guiltFreeActual) || 0;
+  const debt = Number(debtActual) || 0;
   const investments = Number(investmentsActual) || 0;
   const goals = Number(goalsActual) || 0;
   const existingEmi = Number(maxEmiActual) || 0;
@@ -128,13 +132,16 @@ export function evaluatePurchase({
     };
   }
 
-  // Monthly free cash flow after mandatory expenses (essentials + existing EMIs)
-  const monthlyFreeCash = Math.max(salaryNum - essentials - existingEmi, 0);
-  const trueDiscretionaryCash = Math.max(salaryNum - essentials - existingEmi - investments - goals, 0);
+  // Total monthly spending across core rules 1-5 (EMIs in Rule 6 are tracked separately for EMI load cap)
+  const totalCurrentSpent = essentials + guiltFree + debt + investments + goals;
+
+  // Monthly free cash flow after committed obligations (essentials + guilt-free + debt)
+  const monthlyFreeCash = Math.max(salaryNum - essentials - guiltFree - debt, 0);
+  const trueDiscretionaryCash = Math.max(salaryNum - totalCurrentSpent, 0);
 
   const priceShareOfAnnual = priceNum / (salaryNum * 12);
   const emiLoadShare = (existingEmi + priceNum / 6) / salaryNum;
-  const postBuySurplus = Math.max(salaryNum - essentials - existingEmi - priceNum / 6, 0);
+  const postBuySurplus = Math.max(salaryNum - totalCurrentSpent - priceNum / 6, 0);
   const postBuySurplusShare = postBuySurplus / salaryNum;
   const efRatio = efTarget > 0 ? ef / efTarget : 0;
 
@@ -143,6 +150,14 @@ export function evaluatePurchase({
   const oppCost10Yr = computeOpportunityCost(priceNum, 10);
 
   let score = 100;
+
+  // 0. Monthly Budget Deficit Protection Check
+  const isOverbudget = totalCurrentSpent > salaryNum;
+  if (isOverbudget) {
+    const deficitAmount = totalCurrentSpent - salaryNum;
+    score -= 35;
+    reasons.push(`You are currently ${formatMoney(deficitAmount)} over your monthly take-home salary budget for this month.`);
+  }
 
   // 1. EMI/debt load
   if (emiLoadShare > 0.4) {
@@ -161,7 +176,7 @@ export function evaluatePurchase({
     reasons.push(
       monthsNeeded
         ? `At your current free cash flow, it takes about ${monthsNeeded} months of saving to afford this outright.`
-        : "You currently have no free cash flow after essentials and EMIs."
+        : "You currently have no free cash flow after essentials, guilt-free, debt, and EMIs."
     );
   } else if (investments > 0 && trueDiscretionaryCash < priceNum / 6) {
     reasons.push(`Affording this outright or via fast payment may require pausing or reducing your monthly investments (${formatMoney(investments)}/mo).`);
@@ -202,10 +217,15 @@ export function evaluatePurchase({
 
   score = Math.max(0, Math.min(100, score));
 
+  // Cap verdict if user is in net budget deficit
   let verdict;
-  if (score >= 70) verdict = "buy-now";
-  else if (score >= 45) verdict = "buy-later";
-  else verdict = "do-not-buy";
+  if (isOverbudget) {
+    verdict = score >= 50 ? "buy-later" : "do-not-buy";
+  } else {
+    if (score >= 70) verdict = "buy-now";
+    else if (score >= 45) verdict = "buy-later";
+    else verdict = "do-not-buy";
+  }
 
   const verdictCopy = {
     "buy-now": {

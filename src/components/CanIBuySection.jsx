@@ -38,6 +38,8 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
   const currentSalary = Number(salary) || 0;
   const salaryForDisplay = Number(salaryTransition) || currentSalary;
   const essentialsActual = Number(actuals?.[1]) || 0;
+  const guiltFreeActual = Number(actuals?.[2]) || 0;
+  const debtActual = Number(actuals?.[3]) || 0;
   const goalsActual = Number(actuals?.[4]) || 0;
   const investmentsActual = Number(actuals?.[5]) || 0;
   const maxEmiActual = Number(actuals?.[6]) || 0;
@@ -81,13 +83,26 @@ export default function CanIBuySection({ salary, salaryTransition, actuals, emer
         price,
         salary: currentSalary,
         essentialsActual,
+        guiltFreeActual,
+        debtActual,
         investmentsActual,
         goalsActual,
         maxEmiActual,
         emergencyFundActual,
         emergencyFundTarget,
       }),
-    [price, currentSalary, essentialsActual, investmentsActual, goalsActual, maxEmiActual, emergencyFundActual, emergencyFundTarget]
+    [
+      price,
+      currentSalary,
+      essentialsActual,
+      guiltFreeActual,
+      debtActual,
+      investmentsActual,
+      goalsActual,
+      maxEmiActual,
+      emergencyFundActual,
+      emergencyFundTarget,
+    ]
   );
 
   const planEval = useMemo(

@@ -112,7 +112,7 @@ describe("evaluatePurchase", () => {
     const d = evaluatePurchase(healthy);
     expect(d.verdict).toBe("buy-now");
     expect(d.score).toBeGreaterThanOrEqual(70);
-    expect(d.monthlyFreeCash).toBe(50000);
+    expect(d.monthlyFreeCash).toBe(60000);
   });
 
   it("rejects an unaffordable purchase", () => {
@@ -141,15 +141,28 @@ describe("evaluatePurchase", () => {
     expect(d.score).toBeGreaterThanOrEqual(45);
     expect(d.score).toBeLessThan(70);
   });
+
   it("warns if purchase disrupts monthly investments/SIPs", () => {
     const d = evaluatePurchase({
       ...healthy,
       price: 180000, // 30k/mo for 6 mo
-      essentialsActual: 40000,
-      maxEmiActual: 10000,
-      investmentsActual: 30000, // free cash = 50k, discretionary = 20k (< 30k)
+      essentialsActual: 55000, // free cash = 45k
+      investmentsActual: 30000, // total spent = 85k, discretionary = 15k (< 30k/mo required for 6mo purchase)
     });
     expect(d.reasons.some((r) => r.includes("pausing or reducing your monthly investments"))).toBe(true);
+  });
+
+  it("caps verdict to buy-later/do-not-buy when current monthly spending exceeds salary", () => {
+    const d = evaluatePurchase({
+      ...healthy,
+      price: 5000,
+      salary: 100000,
+      essentialsActual: 60000,
+      guiltFreeActual: 30000,
+      debtActual: 20000, // total spent = 110k (> 100k salary)
+    });
+    expect(d.verdict).not.toBe("buy-now");
+    expect(d.reasons.some((r) => r.includes("over your monthly take-home salary"))).toBe(true);
   });
 });
 
