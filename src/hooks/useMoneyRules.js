@@ -153,8 +153,24 @@ function reducer(state, action) {
     case ACTIONS.COPY_MONTH: {
       const source = action.store.months?.[action.sourceMonth];
       if (!source) return state;
+
+      // Copy actuals for Wealth & Salary, but clear Spending & Savings actuals (Rules 1-5)
       const copiedActuals = { ...(source.actuals || {}) };
+      for (let ruleId = 1; ruleId <= 5; ruleId++) {
+        delete copiedActuals[ruleId];
+      }
+
+      // Copy breakdown items: keep labels/names, but set amounts to "" for Rules 1-5
       let items = JSON.parse(JSON.stringify(source.items || {}));
+      for (let ruleId = 1; ruleId <= 5; ruleId++) {
+        if (Array.isArray(items[ruleId])) {
+          items[ruleId] = items[ruleId].map((it) => ({
+            ...it,
+            amount: 0,
+          }));
+        }
+      }
+
       items = syncEmergencyRow(items, Number(copiedActuals[7]) || 0);
       items = sortAllBreakdownItems(items);
       const activeM = action.store.activeMonth || getCurrentMonthKey();
