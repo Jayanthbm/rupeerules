@@ -239,4 +239,31 @@
   .mrc-danger-zone-wrap button {
     width: 100% !important;
   }
+
+  /* Gold holding rows (Physical + Digital): stack cleanly on narrow screens */
+  .mrc-gold-row .mrc-breakdown-name-input {
+    flex-basis: 100%;
+  }
+
+  .mrc-gold-row .mrc-breakdown-amount-wrap {
+    flex-basis: 100%;
+  }
+
+  .mrc-gold-left {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .mrc-gold-right {
+    flex: 1 1 auto;
+  }
+
+  .mrc-gold-grams-wrap {
+    flex: 1 1 auto;
+    min-width: 64px;
+  }
+
+  .mrc-gold-history-note {
+    white-space: normal;
+  }
 }

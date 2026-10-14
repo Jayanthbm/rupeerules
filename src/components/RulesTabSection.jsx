@@ -15,6 +15,7 @@ export default function RulesTabSection({
   onSortBreakdownItems,
   onClearAll,
   isLocked = false,
+  activeMonth,
 }) {
   return (
     <div className="mrc-rules">
@@ -57,6 +58,7 @@ export default function RulesTabSection({
                   onRemoveBreakdownItem={onRemoveBreakdownItem}
                   onSortBreakdownItems={onSortBreakdownItems}
                   isLocked={isLocked}
+                  activeMonth={activeMonth}
                 />
               );
             })}
@@ -83,6 +85,7 @@ export default function RulesTabSection({
                   onRemoveBreakdownItem={onRemoveBreakdownItem}
                   onSortBreakdownItems={onSortBreakdownItems}
                   isLocked={isLocked}
+                  activeMonth={activeMonth}
                 />
               );
             })}

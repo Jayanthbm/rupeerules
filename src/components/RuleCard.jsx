@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import NumberTicker from "./NumberTicker";
+import GoldHoldingRow from "./GoldHoldingRow";
 import { CURRENCY, formatMoney, badgeLabel } from "../utils/formatters";
 import { getRuleFeedback } from "../utils/feedback";
 import { projectFireMonths, formatFireYears } from "../utils/fireProjection";
@@ -15,6 +16,7 @@ export default function RuleCard({
   onRemoveBreakdownItem,
   onSortBreakdownItems,
   isLocked = false,
+  activeMonth,
 }) {
   const hasBreakdownOption = Boolean(rule.defaultItems);
   const isAlwaysBreakdown = Boolean(rule.alwaysBreakdown);
@@ -172,6 +174,23 @@ export default function RuleCard({
                 <div className="mrc-breakdown-list">
                   {currentBreakdownList.map((subItem) => {
                     const isLinkedItem = subItem.isLinked || subItem.id === "w3_emergency";
+                    const isGoldHolding =
+                      subItem.kind === "gold" ||
+                      subItem.id === "w3_physical_gold" ||
+                      subItem.id === "w3_digital_gold";
+                    if (isGoldHolding) {
+                      return (
+                        <GoldHoldingRow
+                          key={`${subItem.id}-gold-${activeMonth}`}
+                          subItem={subItem}
+                          ruleId={rule.id}
+                          isLocked={isLocked}
+                          activeMonth={activeMonth}
+                          onUpdateBreakdownItem={onUpdateBreakdownItem}
+                          onSortBreakdownItems={onSortBreakdownItems}
+                        />
+                      );
+                    }
                     return (
                       <div
                         key={subItem.id}
