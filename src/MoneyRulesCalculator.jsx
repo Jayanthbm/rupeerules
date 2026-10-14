@@ -155,6 +155,7 @@ export default function MoneyRulesCalculator() {
               onSortBreakdownItems={sortBreakdownItems}
               onClearAll={handleClearAll}
               isLocked={isLocked}
+              activeMonth={activeMonth}
             />
           )}
         </>

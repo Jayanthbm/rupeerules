@@ -122,8 +122,8 @@ export const WEALTH_RULES = [
       { id: "w3_epf", name: "EPF", amount: 0, isFixed: true },
       { id: "w3_stocks", name: "Stocks", amount: 0, isFixed: true },
       { id: "w3_mf", name: "Mutual Funds", amount: 0, isFixed: true },
-      { id: "w3_digital_gold", name: "Digital Gold", amount: 0, isFixed: true },
-      { id: "w3_physical_gold", name: "Physical Gold", amount: 0, isFixed: true },
+      { id: "w3_digital_gold", name: "Digital Gold", amount: 0, isFixed: true, kind: "gold" },
+      { id: "w3_physical_gold", name: "Physical Gold", amount: 0, isFixed: true, kind: "gold" },
     ],
   },
 ];

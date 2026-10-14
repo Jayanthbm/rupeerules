@@ -2,6 +2,7 @@ import { useReducer, useState, useEffect, useMemo, useCallback, useRef } from "r
 import { ALL_RULES } from "../rules";
 import { formatSalaryInput, stripFormatting, formatMoney } from "../utils/formatters";
 import { computeReportsData } from "../utils/reports";
+import { GOLD_SNAPSHOT_FIELDS } from "../utils/goldRate";
 import {
   loadAllData,
   saveAllData,
@@ -78,8 +79,17 @@ function syncEmergencyRow(items, efValue) {
         amount: efValue > 0 ? efValue : "",
       };
     }
+    // Preserve gold-snapshot fields (grams/purity/ratePerGram/rateAt) so a stored
+    // valuation survives reloads and month switches.
+    const preserved = {};
+    if (existing) {
+      for (const field of GOLD_SNAPSHOT_FIELDS) {
+        if (existing[field] !== undefined) preserved[field] = existing[field];
+      }
+    }
     return {
       ...def,
+      ...preserved,
       amount: (existing && existing.amount !== "" && existing.amount !== undefined && existing.amount !== null)
         ? existing.amount
         : 0,

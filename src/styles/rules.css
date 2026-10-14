@@ -812,4 +812,157 @@
   justify-content: flex-end;
 }
 
+/* --- Gold holding rows: Physical + Digital Gold (grams + purity + live rate) --- */
+
+.mrc-gold-row {
+  flex-wrap: wrap;
+}
+
+/* Left: gold name + rate derivation line */
+.mrc-gold-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mrc-gold-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mrc-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Right: grams input + purity select + refresh icon, one compact row */
+.mrc-gold-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.mrc-gold-grams-wrap {
+  flex: 0 1 84px;
+  min-width: 60px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--mrc-input-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.mrc-gold-grams-wrap:focus-within {
+  border-color: var(--rule-color);
+}
+
+.mrc-gold-grams-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mrc-text);
+  outline: none;
+  font-family: inherit;
+}
+
+.mrc-gold-grams-suffix {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mrc-text-muted);
+}
+
+.mrc-gold-purity-select {
+  background: var(--mrc-input-bg);
+  border: 1px solid var(--mrc-border);
+  border-radius: 6px;
+  padding: 5px 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mrc-text);
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+.mrc-gold-purity-select:focus {
+  border-color: var(--rule-color);
+}
+
+.mrc-gold-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: var(--rule-color);
+  border: 1px solid var(--rule-color);
+  color: #ffffff;
+  border-radius: 6px;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: opacity 0.2s ease;
+}
+
+.mrc-gold-refresh-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.mrc-gold-refresh-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mrc-gold-refresh-btn-loading svg {
+  animation: mrc-gold-spin 0.9s linear infinite;
+}
+
+@keyframes mrc-gold-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mrc-gold-derivation {
+  font-size: 11px;
+  color: var(--mrc-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mrc-gold-total {
+  color: var(--rule-color);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mrc-gold-history-note {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: var(--mrc-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mrc-gold-hint {
+  font-size: 11px;
+  color: var(--mrc-warning);
+  white-space: normal;
+}
+
+.mrc-gold-error {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: var(--mrc-warning);
+}
+
 
